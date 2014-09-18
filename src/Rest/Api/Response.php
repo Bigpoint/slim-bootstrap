@@ -12,11 +12,13 @@ interface Response
      * @param \Slim\Http\Request  $request  The Slim request instance
      * @param \Slim\Http\Response $response The Slim response instance
      * @param \Slim\Http\Headers  $headers  The Slim request header instance
+     * @param String              $shortName
      */
     public function __construct(
         \Slim\Http\Request $request,
         \Slim\Http\Response $response,
-        \Slim\Http\Headers $headers
+        \Slim\Http\Headers $headers,
+        $shortName
     );
 
     /**

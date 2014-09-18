@@ -35,18 +35,26 @@ class JsonHal implements Response
     private $_headers = null;
 
     /**
+     * @var string
+     */
+    private $_shortName = '';
+
+    /**
      * @param \Slim\Http\Request  $request  The Slim request object.
      * @param \Slim\Http\Response $response The Slim response object.
      * @param \Slim\Http\Headers  $headers  The Slim response headers object.
+     * @param String              $shortName
      */
     public function __construct(
         \Slim\Http\Request $request,
         \Slim\Http\Response $response,
-        \Slim\Http\Headers $headers
+        \Slim\Http\Headers $headers,
+        $shortName
     ) {
-        $this->_request  = $request;
-        $this->_response = $response;
-        $this->_headers  = $headers;
+        $this->_request   = $request;
+        $this->_response  = $response;
+        $this->_headers   = $headers;
+        $this->_shortName = $shortName;
     }
 
     /**
@@ -107,7 +115,7 @@ class JsonHal implements Response
     private function _addAdditionalLinks(Hal $hal, array $links)
     {
         foreach ($links as $rel => $uri) {
-            $hal->addLink('pit:' . $rel, $uri);
+            $hal->addLink($this->_shortName . ':' . $rel, $uri);
         }
     }
 }

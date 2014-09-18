@@ -90,7 +90,8 @@ class Bootstrap
                     $responseFactory = new Factory(
                         $app->request,
                         $app->response,
-                        $app->response->headers
+                        $app->response->headers,
+                        $applicationConfig->shortName
                     );
                     $response        = $responseFactory->create(
                         $app->request->headers->get('Accept')

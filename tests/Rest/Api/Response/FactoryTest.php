@@ -45,7 +45,8 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         $this->_candidate = new Factory(
             $this->_mockRequest,
             $this->_mockResponse,
-            $this->_mockHeaders
+            $this->_mockHeaders,
+            'mockShortName'
         );
     }
 

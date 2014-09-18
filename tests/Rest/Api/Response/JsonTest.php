@@ -58,7 +58,8 @@ class JsonTest extends \PHPUnit_Framework_TestCase
         $this->_candidate = new Json(
             $this->_mockRequest,
             $this->_mockResponse,
-            $this->_mockHeaders
+            $this->_mockHeaders,
+            'mockShortName'
         );
     }
 
