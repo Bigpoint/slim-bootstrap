@@ -25,6 +25,16 @@ class Bootstrap
     private $_aclConfig = null;
 
     /**
+     * @var array
+     */
+    private $_collectionEndpoints = array();
+
+    /**
+     * @var array
+     */
+    private $_ressourceEndpoints = array();
+
+    /**
      * @param \stdClass $applicationConfig
      * @param \stdClass $aclConfig
      */
@@ -36,15 +46,10 @@ class Bootstrap
     }
 
     /**
-     * @param array $collectionEndpoints
-     * @param array $ressourceEndpoints
-     *
      * @return Slim
      */
-    public function setUp(
-        array $collectionEndpoints = array(),
-        array $ressourceEndpoints = array()
-    ) {
+    public function setUp()
+    {
         $applicationConfig = $this->_applicationConfig;
 
         $app = new Slim(
@@ -116,7 +121,7 @@ class Bootstrap
 
 
         $indexEndpoint = new Index();
-        $indexEndpoint->setData($collectionEndpoints);
+        $indexEndpoint->setData($this->_collectionEndpoints);
 
         $app->get(
             '/',
@@ -129,7 +134,7 @@ class Bootstrap
         $params = $app->request->get();
         unset($params['token']);
 
-        foreach ($collectionEndpoints as $route => $routeData) {
+        foreach ($this->_collectionEndpoints as $route => $routeData) {
             /** @var \Rest\Api\Endpoint\Collection $endpoint */
             $endpoint = $routeData['endpoint'];
 
@@ -146,7 +151,7 @@ class Bootstrap
                 }
             )->name($routeData['name']);
         }
-        foreach ($ressourceEndpoints as $route => $routeData) {
+        foreach ($this->_ressourceEndpoints as $route => $routeData) {
             /** @var \Rest\Api\Endpoint\Ressource $endpoint */
             $endpoint = $routeData['endpoint'];
 
@@ -176,5 +181,37 @@ class Bootstrap
         }
 
         return $app;
+    }
+
+    /**
+     * @param String     $route
+     * @param String     $name
+     * @param Collection $endpoint
+     */
+    public function addCollectionEndpoint($route, $name, Collection $endpoint)
+    {
+        $this->_collectionEndpoints[$route] = array(
+            'name'     => $name,
+            'endpoint' => $endpoint,
+        );
+    }
+
+    /**
+     * @param String    $route
+     * @param String    $name
+     * @param array     $conditions
+     * @param Ressource $endpoint
+     */
+    public function addRessourceEndpoint(
+        $route,
+        $name,
+        array $conditions,
+        Ressource $endpoint
+    ) {
+        $this->_ressourceEndpoints[$route] = array(
+            'name'       => $name,
+            'conditions' => $conditions,
+            'endpoint'   => $endpoint,
+        );
     }
 }
