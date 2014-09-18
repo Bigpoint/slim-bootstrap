@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<phpunit bootstrap="./bootstrap.php"
+         colors="true"
+         syntaxCheck="true"
+         strict="true"
+         verbose="true">
+
+    <testsuite name="REST API Test Suite">
+        <directory>./</directory>
+    </testsuite>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">../src</directory>
+        </whitelist>
+    </filter>
+
+</phpunit>

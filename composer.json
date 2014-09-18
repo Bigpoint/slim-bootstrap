@@ -1,0 +1,23 @@
+{
+    "name": "libraries/restapi",
+    "description": "REST API",
+    "authors": [
+        {
+            "name": "Andreas Schleifer",
+            "email": "aschleifer@bigpoint.net"
+        }
+    ],
+    "require": {
+        "php": ">=5.3.3",
+        "slim/slim": "2.*",
+        "nocarrier/hal": "0.9.*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "3.7.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "Rest\\Api\\": ["src/", "tests/"]
+        }
+    }
+}
