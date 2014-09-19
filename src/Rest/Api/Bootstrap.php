@@ -158,11 +158,9 @@ class Bootstrap
 
             $app->get(
                 $route,
-                function ($param1, $param2 = null) use (
-                    &$response,
-                    $endpoint,
-                    $app
-                ) {
+                function () use (&$response, $endpoint, $app) {
+                    $params = func_get_args();
+
                     if (false === ($endpoint instanceof Ressource)) {
                         throw new Exception(
                             'endpoint "' . get_class($endpoint) . '" not valid'
@@ -170,7 +168,7 @@ class Bootstrap
                     }
 
                     try {
-                        $response->output($endpoint->get($param1, $param2));
+                        $response->output($endpoint->get($params));
                     } catch (Exception $e) {
                         $app->response->setStatus($e->getCode());
                         $app->response->setBody($e->getMessage());

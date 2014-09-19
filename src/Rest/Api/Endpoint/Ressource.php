@@ -14,12 +14,10 @@ interface Ressource
      * This function is called on a GET request to get all data for this
      * endpoint and put them in a usable format.
      *
-     * @param string $param1 The first parameter for the endpoint
-     *                       from the GET request.
-     * @param string $param2 The second parameter for the endpoint
-     *                       from the GET request.
+     * @param array $parameters The parameters for the endpoint from the GET
+     *                          request.
      *
      * @return DataObject
      */
-    public function get($param1, $param2);
+    public function get(array $parameters);
 }
