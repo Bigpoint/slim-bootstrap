@@ -61,10 +61,15 @@ class Bootstrap
         /** @var \Rest\Api\Response $response */
         $response = null;
 
-        $acl            = new Acl($this->_aclConfig);
-        $authentication = new Authentication(
-            $applicationConfig->apiUrl
-        );
+        if (null !== $this->_aclConfig) {
+            $acl            = new Acl($this->_aclConfig);
+            $authentication = new Authentication(
+                $applicationConfig->apiUrl
+            );
+        } else {
+            $acl            = null;
+            $authentication = null;
+        }
 
         $app->hook(
             'slim.before.dispatch',
@@ -97,14 +102,16 @@ class Bootstrap
                         $app->request->headers->get('Accept')
                     );
 
-                    $clientId = $authentication->authenticate(
-                        $app->request->get('token')
-                    );
+                    if (null !== $authentication && null !== $acl) {
+                        $clientId = $authentication->authenticate(
+                            $app->request->get('token')
+                        );
 
-                    $acl->access(
-                        $clientId,
-                        $app->router()->getCurrentRoute()->getName()
-                    );
+                        $acl->access(
+                            $clientId,
+                            $app->router()->getCurrentRoute()->getName()
+                        );
+                    }
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
