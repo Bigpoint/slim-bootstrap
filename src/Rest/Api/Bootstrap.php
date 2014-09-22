@@ -39,7 +39,7 @@ class Bootstrap
      * @param \stdClass $aclConfig
      */
     public function __construct(
-        \stdClass $applicationConfig, \stdClass $aclConfig
+        \stdClass $applicationConfig, \stdClass $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_aclConfig         = $aclConfig;
