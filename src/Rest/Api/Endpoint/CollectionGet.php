@@ -4,9 +4,9 @@ namespace Rest\Api\Endpoint;
 /**
  * This interface represents the basic structure for the collection endpoints.
  *
- * @package Rest\Api
+ * @package Rest\Api\Endpoint
  */
-interface Collection
+interface CollectionGet
 {
     /**
      * This function is called on a GET request to get all data for this

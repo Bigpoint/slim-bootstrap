@@ -1,9 +1,9 @@
 <?php
 namespace Rest\Api;
 
-use \Rest\Api\Endpoint\Collection;
+use \Rest\Api\Endpoint\CollectionGet;
 use \Rest\Api\Endpoint\Index;
-use \Rest\Api\Endpoint\Ressource;
+use \Rest\Api\Endpoint\RessourceGet;
 use \Rest\Api\Response\Factory;
 use \Slim\Slim;
 
@@ -27,12 +27,22 @@ class Bootstrap
     /**
      * @var array
      */
-    private $_collectionEndpoints = array();
+    private $_collectionGetEndpoints = array();
+
+    /**
+     * @var Slim
+     */
+    private $_app = null;
+
+    /**
+     * @var Response
+     */
+    private $_response = null;
 
     /**
      * @var array
      */
-    private $_ressourceEndpoints = array();
+    private $_params = array();
 
     /**
      * @param \stdClass $applicationConfig
@@ -43,6 +53,14 @@ class Bootstrap
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_aclConfig         = $aclConfig;
+        $this->_app               = new Slim(
+            array(
+                'debug' => $applicationConfig->debug,
+            )
+        );
+
+        $this->_params = $this->_app->request->get();
+        unset($this->_params['token']);
     }
 
     /**
@@ -51,15 +69,8 @@ class Bootstrap
     public function setUp()
     {
         $applicationConfig = $this->_applicationConfig;
-
-        $app = new Slim(
-            array(
-                'debug' => $applicationConfig->debug,
-            )
-        );
-
-        /** @var \Rest\Api\Response $response */
-        $response = null;
+        $app               = $this->_app;
+        $response          = &$this->_response;
 
         if (null !== $this->_aclConfig) {
             $acl            = new Acl($this->_aclConfig);
@@ -128,8 +139,7 @@ class Bootstrap
         );
 
 
-        $indexEndpoint = new Index();
-        $indexEndpoint->setData($this->_collectionEndpoints);
+        $indexEndpoint = new Index($this->_collectionGetEndpoints);
 
         $app->get(
             '/',
@@ -139,85 +149,75 @@ class Bootstrap
         )->name('index');
 
 
-        $params = $app->request->get();
-        unset($params['token']);
-
-        foreach ($this->_collectionEndpoints as $route => $routeData) {
-            /** @var \Rest\Api\Endpoint\Collection $endpoint */
-            $endpoint = $routeData['endpoint'];
-
-            $app->get(
-                $route,
-                function () use (&$response, $endpoint, $params) {
-                    if (false === ($endpoint instanceof Collection)) {
-                        throw new Exception(
-                            'endpoint "' . get_class($endpoint) . '" not valid'
-                        );
-                    }
-
-                    $response->output($endpoint->get($params));
-                }
-            )->name($routeData['name']);
-        }
-        foreach ($this->_ressourceEndpoints as $route => $routeData) {
-            /** @var \Rest\Api\Endpoint\Ressource $endpoint */
-            $endpoint = $routeData['endpoint'];
-
-            $app->get(
-                $route,
-                function () use (&$response, $endpoint, $app) {
-                    $params = func_get_args();
-
-                    if (false === ($endpoint instanceof Ressource)) {
-                        throw new Exception(
-                            'endpoint "' . get_class($endpoint) . '" not valid'
-                        );
-                    }
-
-                    try {
-                        $response->output($endpoint->get($params));
-                    } catch (Exception $e) {
-                        $app->response->setStatus($e->getCode());
-                        $app->response->setBody($e->getMessage());
-
-                        $app->stop();
-                    }
-                }
-            )->name($routeData['name'])->conditions($routeData['conditions']);
-        }
-
         return $app;
     }
 
     /**
-     * @param String     $route
-     * @param String     $name
-     * @param Collection $endpoint
+     * @param String        $route
+     * @param String        $name
+     * @param CollectionGet $endpoint
      */
-    public function addCollectionEndpoint($route, $name, Collection $endpoint)
-    {
-        $this->_collectionEndpoints[$route] = array(
-            'name'     => $name,
-            'endpoint' => $endpoint,
-        );
+    public function addCollectionGetEndpoint(
+        $route,
+        $name,
+        CollectionGet $endpoint
+    ) {
+        $params   = $this->_params;
+        $response = &$this->_response;
+
+        $this->_app->get(
+            $route,
+            function () use (&$response, $endpoint, $params) {
+                if (false === ($endpoint instanceof CollectionGet)) {
+                    throw new Exception(
+                        'endpoint "' . get_class($endpoint)
+                        . '" is not a valid collection GET endpoint'
+                    );
+                }
+
+                $response->output($endpoint->get($params));
+            }
+        )->name($name);
+
+        $this->_collectionGetEndpoints[] = $name;
     }
 
     /**
-     * @param String    $route
-     * @param String    $name
-     * @param array     $conditions
-     * @param Ressource $endpoint
+     * @param String       $route
+     * @param String       $name
+     * @param array        $conditions
+     * @param RessourceGet $endpoint
      */
-    public function addRessourceEndpoint(
+    public function addRessourceGetEndpoint(
         $route,
         $name,
         array $conditions,
-        Ressource $endpoint
+        RessourceGet $endpoint
     ) {
-        $this->_ressourceEndpoints[$route] = array(
-            'name'       => $name,
-            'conditions' => $conditions,
-            'endpoint'   => $endpoint,
-        );
+        $app      = $this->_app;
+        $response = &$this->_response;
+
+        $app->get(
+            $route,
+            function () use (&$response, $endpoint, $app) {
+                $params = func_get_args();
+
+                if (false === ($endpoint instanceof RessourceGet)) {
+                    throw new Exception(
+                        'endpoint "' . get_class($endpoint)
+                        . '" is not a valid ressource GET endpoint'
+                    );
+                }
+
+                try {
+                    $response->output($endpoint->get($params));
+                } catch (Exception $e) {
+                    $app->response->setStatus($e->getCode());
+                    $app->response->setBody($e->getMessage());
+
+                    $app->stop();
+                }
+            }
+        )->name($name)->conditions($conditions);
     }
 }

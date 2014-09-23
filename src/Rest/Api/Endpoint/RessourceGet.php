@@ -6,9 +6,9 @@ use \Rest\Api\DataObject;
 /**
  * This interface represents the basic structure for the ressource endpoints.
  *
- * @package Rest\Api
+ * @package Rest\Api\Endpoint
  */
-interface Ressource
+interface RessourceGet
 {
     /**
      * This function is called on a GET request to get all data for this
