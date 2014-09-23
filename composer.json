@@ -9,8 +9,8 @@
     ],
     "require": {
         "php": ">=5.3.3",
-        "slim/slim": "2.*",
-        "nocarrier/hal": "0.9.*"
+        "slim/slim": "*",
+        "nocarrier/hal": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "3.7.*"

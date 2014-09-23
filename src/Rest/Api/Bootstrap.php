@@ -2,8 +2,10 @@
 namespace Rest\Api;
 
 use \Rest\Api\Endpoint\CollectionGet;
+use \Rest\Api\Endpoint\CollectionPost;
 use \Rest\Api\Endpoint\Index;
 use \Rest\Api\Endpoint\RessourceGet;
+use \Rest\Api\Endpoint\RessourcePost;
 use \Rest\Api\Response\Factory;
 use \Slim\Slim;
 
@@ -211,6 +213,75 @@ class Bootstrap
 
                 try {
                     $response->output($endpoint->get($params));
+                } catch (Exception $e) {
+                    $app->response->setStatus($e->getCode());
+                    $app->response->setBody($e->getMessage());
+
+                    $app->stop();
+                }
+            }
+        )->name($name)->conditions($conditions);
+    }
+
+    /**
+     * @param String         $route
+     * @param String         $name
+     * @param CollectionPost $endpoint
+     */
+    public function addCollectionPostEndpoint(
+        $route,
+        $name,
+        CollectionPost $endpoint
+    ) {
+        $params   = $this->_params;
+        $response = &$this->_response;
+
+        $this->_app->post(
+            $route,
+            function () use (&$response, $endpoint, $params) {
+                if (false === ($endpoint instanceof CollectionPost)) {
+                    throw new Exception(
+                        'endpoint "' . get_class($endpoint)
+                        . '" is not a valid collection POST endpoint'
+                    );
+                }
+
+                $response->output($endpoint->post($params));
+            }
+        )->name($name);
+
+        $this->_collectionGetEndpoints[] = $name;
+    }
+
+    /**
+     * @param String        $route
+     * @param String        $name
+     * @param array         $conditions
+     * @param RessourcePost $endpoint
+     */
+    public function addRessourcePostEndpoint(
+        $route,
+        $name,
+        array $conditions,
+        RessourcePost $endpoint
+    ) {
+        $app      = $this->_app;
+        $response = &$this->_response;
+
+        $app->post(
+            $route,
+            function () use (&$response, $endpoint, $app) {
+                $params = func_get_args();
+
+                if (false === ($endpoint instanceof RessourcePost)) {
+                    throw new Exception(
+                        'endpoint "' . get_class($endpoint)
+                        . '" is not a valid ressource POST endpoint'
+                    );
+                }
+
+                try {
+                    $response->output($endpoint->post($params));
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
