@@ -11,20 +11,18 @@ use \Rest\Api\DataObject;
 class Index
 {
     /**
-     * The data array that holds all endpoint names and their instances.
+     * The data array that holds all endpoint names
      *
      * @var array
      */
-    private $_data = array();
+    private $_endpoints = array();
 
     /**
-     * Sets the data array that holds all endpoint names and their instances.
-     *
-     * @param array $data
+     * @param array $endpoints
      */
-    public function setData(array $data)
+    public function __construct(array $endpoints)
     {
-        $this->_data = $data;
+        $this->_endpoints = $endpoints;
     }
 
     /**
@@ -37,8 +35,8 @@ class Index
     {
         $links = array();
 
-        foreach ($this->_data as $data) {
-            $links[$data['name']] = '/' . $data['name'];
+        foreach ($this->_endpoints as $endpoint) {
+            $links[$endpoint] = '/' . $endpoint;
         }
 
         return new DataObject(
