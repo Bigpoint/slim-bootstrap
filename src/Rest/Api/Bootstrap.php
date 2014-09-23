@@ -70,7 +70,7 @@ class Bootstrap
     {
         $applicationConfig = $this->_applicationConfig;
         $app               = $this->_app;
-        $response          = $this->_response;
+        $response          = &$this->_response;
 
         if (null !== $this->_aclConfig) {
             $acl            = new Acl($this->_aclConfig);
@@ -163,7 +163,7 @@ class Bootstrap
         CollectionGet $endpoint
     ) {
         $params   = $this->_params;
-        $response = $this->_response;
+        $response = &$this->_response;
 
         $this->_app->get(
             $route,
@@ -195,7 +195,7 @@ class Bootstrap
         RessourceGet $endpoint
     ) {
         $app      = $this->_app;
-        $response = $this->_response;
+        $response = &$this->_response;
 
         $app->get(
             $route,
