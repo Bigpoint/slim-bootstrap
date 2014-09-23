@@ -35,6 +35,11 @@ class Bootstrap
     private $_app = null;
 
     /**
+     * @var Response
+     */
+    private $_response = null;
+
+    /**
      * @var array
      */
     private $_params = array();
@@ -65,9 +70,7 @@ class Bootstrap
     {
         $applicationConfig = $this->_applicationConfig;
         $app               = $this->_app;
-
-        /** @var \Rest\Api\Response $response */
-        $response = null;
+        $response          = $this->_response;
 
         if (null !== $this->_aclConfig) {
             $acl            = new Acl($this->_aclConfig);
@@ -159,7 +162,8 @@ class Bootstrap
         $name,
         CollectionGet $endpoint
     ) {
-        $params = $this->_params;
+        $params   = $this->_params;
+        $response = $this->_response;
 
         $this->_app->get(
             $route,
@@ -190,7 +194,8 @@ class Bootstrap
         array $conditions,
         RessourceGet $endpoint
     ) {
-        $app = $this->_app;
+        $app      = $this->_app;
+        $response = $this->_response;
 
         $app->get(
             $route,
