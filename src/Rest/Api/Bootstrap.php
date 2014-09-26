@@ -3,9 +3,11 @@ namespace Rest\Api;
 
 use \Rest\Api\Endpoint\CollectionGet;
 use \Rest\Api\Endpoint\CollectionPost;
+use \Rest\Api\Endpoint\CollectionPut;
 use \Rest\Api\Endpoint\Index;
 use \Rest\Api\Endpoint\RessourceGet;
 use \Rest\Api\Endpoint\RessourcePost;
+use \Rest\Api\Endpoint\RessourcePut;
 use \Rest\Api\Response\Factory;
 use \Slim\Slim;
 
@@ -282,6 +284,75 @@ class Bootstrap
 
                 try {
                     $response->output($endpoint->post($params));
+                } catch (Exception $e) {
+                    $app->response->setStatus($e->getCode());
+                    $app->response->setBody($e->getMessage());
+
+                    $app->stop();
+                }
+            }
+        )->name($name)->conditions($conditions);
+    }
+
+    /**
+     * @param String        $route
+     * @param String        $name
+     * @param CollectionPut $endpoint
+     */
+    public function addCollectionPutEndpoint(
+        $route,
+        $name,
+        CollectionPut $endpoint
+    ) {
+        $params   = $this->_params;
+        $response = &$this->_response;
+
+        $this->_app->put(
+            $route,
+            function () use (&$response, $endpoint, $params) {
+                if (false === ($endpoint instanceof CollectionPut)) {
+                    throw new Exception(
+                        'endpoint "' . get_class($endpoint)
+                        . '" is not a valid collection PUT endpoint'
+                    );
+                }
+
+                $response->output($endpoint->put($params));
+            }
+        )->name($name);
+
+        $this->_collectionGetEndpoints[] = $name;
+    }
+
+    /**
+     * @param String       $route
+     * @param String       $name
+     * @param array        $conditions
+     * @param RessourcePut $endpoint
+     */
+    public function addRessourcePutEndpoint(
+        $route,
+        $name,
+        array $conditions,
+        RessourcePut $endpoint
+    ) {
+        $app      = $this->_app;
+        $response = &$this->_response;
+
+        $app->put(
+            $route,
+            function () use (&$response, $endpoint, $app) {
+                $params = func_get_args();
+
+                if (false === ($endpoint instanceof RessourcePut)) {
+                    throw new Exception(
+                        'endpoint "' . get_class($endpoint)
+                        . '" is not a valid ressource PUT endpoint'
+                    );
+                }
+
+                try {
+                    $response->output($endpoint->put($params));
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
