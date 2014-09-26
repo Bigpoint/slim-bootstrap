@@ -309,12 +309,13 @@ class Bootstrap
         $name,
         CollectionPut $endpoint
     ) {
+        $app      = $this->_app;
         $params   = $this->_params;
         $response = &$this->_response;
 
         $this->_app->put(
             $route,
-            function () use (&$response, $endpoint, $params) {
+            function () use (&$response, $endpoint, $params, $app) {
                 if (false === ($endpoint instanceof CollectionPut)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
@@ -322,7 +323,9 @@ class Bootstrap
                     );
                 }
 
-                $response->output($endpoint->put($params));
+                $response->output(
+                    $endpoint->put($params, $app->request->put())
+                );
             }
         )->name($name);
 
@@ -357,7 +360,9 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output($endpoint->put($params));
+                    $response->output(
+                        $endpoint->put($params, $app->request->put())
+                    );
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());

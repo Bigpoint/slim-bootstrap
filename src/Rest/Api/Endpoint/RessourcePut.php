@@ -14,10 +14,11 @@ interface RessourcePut
      * This function is called on a PUT request to get all data for this
      * endpoint and put them in a usable format.
      *
-     * @param array $parameters The parameters for the endpoint from the POST
+     * @param array $parameters The parameters how the endpoint was called.
+     * @param array $data       The parameters for the endpoint from the POST
      *                          request.
      *
      * @return DataObject
      */
-    public function put(array $parameters);
+    public function put(array $parameters, array $data);
 }
