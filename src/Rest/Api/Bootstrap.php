@@ -235,12 +235,13 @@ class Bootstrap
         $name,
         CollectionPost $endpoint
     ) {
+        $app      = $this->_app;
         $params   = $this->_params;
         $response = &$this->_response;
 
         $this->_app->post(
             $route,
-            function () use (&$response, $endpoint, $params) {
+            function () use (&$response, $endpoint, $params, $app) {
                 if (false === ($endpoint instanceof CollectionPost)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
@@ -248,7 +249,9 @@ class Bootstrap
                     );
                 }
 
-                $response->output($endpoint->post($params));
+                $response->output(
+                    $endpoint->post($params, $app->request->post())
+                );
             }
         )->name($name);
 
@@ -283,7 +286,9 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output($endpoint->post($params));
+                    $response->output(
+                        $endpoint->post($params, $app->request->post())
+                    );
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
