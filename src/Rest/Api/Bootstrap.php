@@ -1,6 +1,7 @@
 <?php
 namespace Rest\Api;
 
+use \Rest\Api\Authentication\Oauth;
 use \Rest\Api\Endpoint\CollectionGet;
 use \Rest\Api\Endpoint\CollectionPost;
 use \Rest\Api\Endpoint\CollectionPut;
@@ -68,9 +69,12 @@ class Bootstrap
     }
 
     /**
+     * @param Authentication $customAuthentication custom authentication
+     *                                             implementation
+     *
      * @return Slim
      */
-    public function setUp()
+    public function setUp(Authentication $customAuthentication = null)
     {
         $applicationConfig = $this->_applicationConfig;
         $app               = $this->_app;
@@ -78,9 +82,14 @@ class Bootstrap
 
         if (null !== $this->_aclConfig) {
             $acl            = new Acl($this->_aclConfig);
-            $authentication = new Authentication(
-                $applicationConfig->apiUrl
-            );
+
+            if (null !== $customAuthentication) {
+                $authentication = $customAuthentication;
+            } else {
+                $authentication = new Oauth(
+                    $applicationConfig->apiUrl
+                );
+            }
         } else {
             $acl            = null;
             $authentication = null;
