@@ -18,8 +18,6 @@ class IndexTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         parent::setUp();
-
-        $this->_candidate = new Index();
     }
 
     /**
@@ -30,7 +28,7 @@ class IndexTest extends \PHPUnit_Framework_TestCase
      */
     public function testGet(array $data, DataObject $result)
     {
-        $this->_candidate->setdata($data);
+        $this->_candidate = new Index($data);
 
         $actual = $this->_candidate->get();
 
@@ -42,12 +40,8 @@ class IndexTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 'data'   => array(
-                    array(
-                        'name' => 'mockUri1',
-                    ),
-                    array(
-                        'name' => 'mockUri2',
-                    ),
+                    'mockUri1',
+                    'mockUri2',
                 ),
                 'result' => new DataObject(
                     array(),
