@@ -1,7 +1,6 @@
 <?php
 namespace Rest\Api;
 
-use \Rest\Api\Authentication\Oauth;
 use \Rest\Api\Endpoint\CollectionGet;
 use \Rest\Api\Endpoint\CollectionPost;
 use \Rest\Api\Endpoint\CollectionPut;
@@ -23,6 +22,11 @@ class Bootstrap
      * @var \stdClass
      */
     private $_applicationConfig = null;
+
+    /**
+     * @var Authentication
+     */
+    private $_authentication = null;
 
     /**
      * @var \stdClass
@@ -51,12 +55,16 @@ class Bootstrap
 
     /**
      * @param \stdClass $applicationConfig
+     * @param Authentication $authentication
      * @param \stdClass $aclConfig
      */
     public function __construct(
-        \stdClass $applicationConfig, \stdClass $aclConfig = null
+        \stdClass $applicationConfig,
+        Authentication $authentication = null,
+        \stdClass $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
+        $this->_authentication    = $authentication;
         $this->_aclConfig         = $aclConfig;
         $this->_app               = new Slim(
             array(
@@ -69,27 +77,19 @@ class Bootstrap
     }
 
     /**
-     * @param Authentication $customAuthentication custom authentication
-     *                                             implementation
-     *
      * @return Slim
      */
-    public function setUp(Authentication $customAuthentication = null)
+    public function setUp()
     {
         $applicationConfig = $this->_applicationConfig;
         $app               = $this->_app;
         $response          = &$this->_response;
 
-        if (null !== $this->_aclConfig) {
+        if (null !== $this->_aclConfig
+            && null !== $this->_authentication
+        ) {
             $acl            = new Acl($this->_aclConfig);
-
-            if (null !== $customAuthentication) {
-                $authentication = $customAuthentication;
-            } else {
-                $authentication = new Oauth(
-                    $applicationConfig->apiUrl
-                );
-            }
+            $authentication = $this->_authentication;
         } else {
             $acl            = null;
             $authentication = null;
