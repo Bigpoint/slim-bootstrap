@@ -24,6 +24,11 @@ class Bootstrap
     private $_applicationConfig = null;
 
     /**
+     * @var Authentication
+     */
+    private $_authentication = null;
+
+    /**
      * @var \stdClass
      */
     private $_aclConfig = null;
@@ -50,12 +55,16 @@ class Bootstrap
 
     /**
      * @param \stdClass $applicationConfig
+     * @param Authentication $authentication
      * @param \stdClass $aclConfig
      */
     public function __construct(
-        \stdClass $applicationConfig, \stdClass $aclConfig = null
+        \stdClass $applicationConfig,
+        Authentication $authentication = null,
+        \stdClass $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
+        $this->_authentication    = $authentication;
         $this->_aclConfig         = $aclConfig;
         $this->_app               = new Slim(
             array(
@@ -75,15 +84,15 @@ class Bootstrap
         $applicationConfig = $this->_applicationConfig;
         $app               = $this->_app;
         $response          = &$this->_response;
-
-        if (null !== $this->_aclConfig) {
+        
+        $acl            = null;
+        $authentication = null;
+            
+        if (null !== $this->_aclConfig
+            && null !== $this->_authentication
+        ) {
             $acl            = new Acl($this->_aclConfig);
-            $authentication = new Authentication(
-                $applicationConfig->apiUrl
-            );
-        } else {
-            $acl            = null;
-            $authentication = null;
+            $authentication = $this->_authentication;
         }
 
         $app->hook(

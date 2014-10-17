@@ -1,12 +1,12 @@
 <?php
-namespace Rest\Api;
+namespace Rest\Api\Authentication;
 
 /**
  * Class AuthenticationTest
  *
- * @package Rest\Api
+ * @package Rest\Api\Authentication
  */
-class AuthenticationTest extends \PHPUnit_Framework_TestCase
+class OauthTest extends \PHPUnit_Framework_TestCase
 {
     /**
      * @var \PHPUnit_Framework_MockObject_MockObject
@@ -18,7 +18,7 @@ class AuthenticationTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
 
         $this->_candidate = $this->getMock(
-            'Rest\\Api\\Authentication',
+            'Rest\\Api\\Authentication\\Oauth',
             array('_call'),
             array('mockApiUrl')
         );
