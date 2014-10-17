@@ -84,15 +84,15 @@ class Bootstrap
         $applicationConfig = $this->_applicationConfig;
         $app               = $this->_app;
         $response          = &$this->_response;
-
+        
+        $acl            = null;
+        $authentication = null;
+            
         if (null !== $this->_aclConfig
             && null !== $this->_authentication
         ) {
             $acl            = new Acl($this->_aclConfig);
             $authentication = $this->_authentication;
-        } else {
-            $acl            = null;
-            $authentication = null;
         }
 
         $app->hook(
