@@ -1,7 +1,7 @@
 <?php
 namespace Rest\Api\Endpoint;
 
-use \Rest\Api\DataObject;
+use \Rest\Api;
 
 /**
  * This interface represents the basic structure for the ressource endpoints.
@@ -18,7 +18,7 @@ interface RessourcePut
      * @param array $data       The parameters for the endpoint from the POST
      *                          request.
      *
-     * @return DataObject
+     * @return Api\DataObject
      */
     public function put(array $parameters, array $data);
 }

@@ -1,6 +1,8 @@
 <?php
 namespace Rest\Api;
 
+use Rest\Api;
+
 /**
  * Interface Authentication
  *
@@ -13,7 +15,7 @@ interface Authentication
      *
      * @return string The clientId of the calling client.
      *
-     * @throws Exception When the passed access $token is invalid.
+     * @throws Api\Exception When the passed access $token is invalid.
      */
     public function authenticate($token);
 }

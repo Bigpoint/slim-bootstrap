@@ -1,15 +1,8 @@
 <?php
 namespace Rest\Api;
 
-use \Rest\Api\Endpoint\CollectionGet;
-use \Rest\Api\Endpoint\CollectionPost;
-use \Rest\Api\Endpoint\CollectionPut;
-use \Rest\Api\Endpoint\Index;
-use \Rest\Api\Endpoint\RessourceGet;
-use \Rest\Api\Endpoint\RessourcePost;
-use \Rest\Api\Endpoint\RessourcePut;
-use \Rest\Api\Response\Factory;
-use \Slim\Slim;
+use \Rest\Api;
+use \Slim;
 
 /**
  * Class Bootstrap
@@ -24,7 +17,7 @@ class Bootstrap
     private $_applicationConfig = null;
 
     /**
-     * @var Authentication
+     * @var Api\Authentication
      */
     private $_authentication = null;
 
@@ -39,12 +32,12 @@ class Bootstrap
     private $_collectionGetEndpoints = array();
 
     /**
-     * @var Slim
+     * @var Slim\Slim
      */
     private $_app = null;
 
     /**
-     * @var Response
+     * @var Api\Response
      */
     private $_response = null;
 
@@ -55,18 +48,18 @@ class Bootstrap
 
     /**
      * @param \stdClass $applicationConfig
-     * @param Authentication $authentication
+     * @param Api\Authentication $authentication
      * @param \stdClass $aclConfig
      */
     public function __construct(
         \stdClass $applicationConfig,
-        Authentication $authentication = null,
+        Api\Authentication $authentication = null,
         \stdClass $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_authentication    = $authentication;
         $this->_aclConfig         = $aclConfig;
-        $this->_app               = new Slim(
+        $this->_app               = new Slim\Slim(
             array(
                 'debug' => $applicationConfig->debug,
             )
@@ -77,21 +70,21 @@ class Bootstrap
     }
 
     /**
-     * @return Slim
+     * @return Slim\Slim
      */
     public function setUp()
     {
         $applicationConfig = $this->_applicationConfig;
         $app               = $this->_app;
         $response          = &$this->_response;
-        
+
         $acl            = null;
         $authentication = null;
-            
+
         if (null !== $this->_aclConfig
             && null !== $this->_authentication
         ) {
-            $acl            = new Acl($this->_aclConfig);
+            $acl            = new Api\Acl($this->_aclConfig);
             $authentication = $this->_authentication;
         }
 
@@ -116,7 +109,7 @@ class Bootstrap
                 );
 
                 try {
-                    $responseFactory = new Factory(
+                    $responseFactory = new Api\Response\Factory(
                         $app->request,
                         $app->response,
                         $app->response->headers,
@@ -152,7 +145,7 @@ class Bootstrap
         );
 
 
-        $indexEndpoint = new Index($this->_collectionGetEndpoints);
+        $indexEndpoint = new Api\Endpoint\Index($this->_collectionGetEndpoints);
 
         $app->get(
             '/',
@@ -166,14 +159,14 @@ class Bootstrap
     }
 
     /**
-     * @param String        $route
-     * @param String        $name
-     * @param CollectionGet $endpoint
+     * @param String                     $route
+     * @param String                     $name
+     * @param Api\Endpoint\CollectionGet $endpoint
      */
     public function addCollectionGetEndpoint(
         $route,
         $name,
-        CollectionGet $endpoint
+        Api\Endpoint\CollectionGet $endpoint
     ) {
         $params   = $this->_params;
         $response = &$this->_response;
@@ -181,7 +174,7 @@ class Bootstrap
         $this->_app->get(
             $route,
             function () use (&$response, $endpoint, $params) {
-                if (false === ($endpoint instanceof CollectionGet)) {
+                if (false === ($endpoint instanceof Api\Endpoint\CollectionGet)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid collection GET endpoint'
@@ -196,16 +189,16 @@ class Bootstrap
     }
 
     /**
-     * @param String       $route
-     * @param String       $name
-     * @param array        $conditions
-     * @param RessourceGet $endpoint
+     * @param String                    $route
+     * @param String                    $name
+     * @param array                     $conditions
+     * @param Api\Endpoint\RessourceGet $endpoint
      */
     public function addRessourceGetEndpoint(
         $route,
         $name,
         array $conditions,
-        RessourceGet $endpoint
+        Api\Endpoint\RessourceGet $endpoint
     ) {
         $app      = $this->_app;
         $response = &$this->_response;
@@ -215,7 +208,7 @@ class Bootstrap
             function () use (&$response, $endpoint, $app) {
                 $params = func_get_args();
 
-                if (false === ($endpoint instanceof RessourceGet)) {
+                if (false === ($endpoint instanceof Api\Endpoint\RessourceGet)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource GET endpoint'
@@ -235,14 +228,14 @@ class Bootstrap
     }
 
     /**
-     * @param String         $route
-     * @param String         $name
-     * @param CollectionPost $endpoint
+     * @param String                      $route
+     * @param String                      $name
+     * @param Api\Endpoint\CollectionPost $endpoint
      */
     public function addCollectionPostEndpoint(
         $route,
         $name,
-        CollectionPost $endpoint
+        Api\Endpoint\CollectionPost $endpoint
     ) {
         $app      = $this->_app;
         $params   = $this->_params;
@@ -251,7 +244,7 @@ class Bootstrap
         $this->_app->post(
             $route,
             function () use (&$response, $endpoint, $params, $app) {
-                if (false === ($endpoint instanceof CollectionPost)) {
+                if (false === ($endpoint instanceof Api\Endpoint\CollectionPost)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid collection POST endpoint'
@@ -268,16 +261,16 @@ class Bootstrap
     }
 
     /**
-     * @param String        $route
-     * @param String        $name
-     * @param array         $conditions
-     * @param RessourcePost $endpoint
+     * @param String                     $route
+     * @param String                     $name
+     * @param array                      $conditions
+     * @param Api\Endpoint\RessourcePost $endpoint
      */
     public function addRessourcePostEndpoint(
         $route,
         $name,
         array $conditions,
-        RessourcePost $endpoint
+        Api\Endpoint\RessourcePost $endpoint
     ) {
         $app      = $this->_app;
         $response = &$this->_response;
@@ -287,7 +280,7 @@ class Bootstrap
             function () use (&$response, $endpoint, $app) {
                 $params = func_get_args();
 
-                if (false === ($endpoint instanceof RessourcePost)) {
+                if (false === ($endpoint instanceof Api\Endpoint\RessourcePost)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource POST endpoint'
@@ -309,14 +302,14 @@ class Bootstrap
     }
 
     /**
-     * @param String        $route
-     * @param String        $name
-     * @param CollectionPut $endpoint
+     * @param String                     $route
+     * @param String                     $name
+     * @param Api\Endpoint\CollectionPut $endpoint
      */
     public function addCollectionPutEndpoint(
         $route,
         $name,
-        CollectionPut $endpoint
+        Api\Endpoint\CollectionPut $endpoint
     ) {
         $app      = $this->_app;
         $params   = $this->_params;
@@ -325,7 +318,7 @@ class Bootstrap
         $this->_app->put(
             $route,
             function () use (&$response, $endpoint, $params, $app) {
-                if (false === ($endpoint instanceof CollectionPut)) {
+                if (false === ($endpoint instanceof Api\Endpoint\CollectionPut)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid collection PUT endpoint'
@@ -345,13 +338,13 @@ class Bootstrap
      * @param String       $route
      * @param String       $name
      * @param array        $conditions
-     * @param RessourcePut $endpoint
+     * @param Api\Endpoint\RessourcePut $endpoint
      */
     public function addRessourcePutEndpoint(
         $route,
         $name,
         array $conditions,
-        RessourcePut $endpoint
+        Api\Endpoint\RessourcePut $endpoint
     ) {
         $app      = $this->_app;
         $response = &$this->_response;
@@ -361,7 +354,7 @@ class Bootstrap
             function () use (&$response, $endpoint, $app) {
                 $params = func_get_args();
 
-                if (false === ($endpoint instanceof RessourcePut)) {
+                if (false === ($endpoint instanceof Api\Endpoint\RessourcePut)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource PUT endpoint'

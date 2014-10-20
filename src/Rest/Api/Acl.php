@@ -1,6 +1,7 @@
 <?php
 namespace Rest\Api;
 
+use \Rest\Api;
 /**
  * This class is responsible for managing the access of the different clientIds
  * to the various endpoints the API provides.
@@ -33,13 +34,13 @@ class Acl
      * @param string $endpointName The endpoint to which the clientId wants
      *                             access
      *
-     * @throws Exception When the clientId was not found in the config,
-     *                   or has no access to the endpoint.
+     * @throws Api\Exception When the clientId was not found in the config,
+     *                       or has no access to the endpoint.
      */
     public function access($clientId, $endpointName)
     {
         if (false === isset($this->_config->access->{$clientId})) {
-            throw new Exception('Access denied', 403);
+            throw new Api\Exception('Access denied', 403);
         }
 
         $role = $this->_config->access->{$clientId};
@@ -47,7 +48,7 @@ class Acl
         if (false === isset($this->_config->roles->{$role}->{$endpointName})
             || true !== $this->_config->roles->{$role}->{$endpointName}
         ) {
-            throw new Exception('Access denied', 403);
+            throw new Api\Exception('Access denied', 403);
         }
     }
 }

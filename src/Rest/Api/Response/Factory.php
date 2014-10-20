@@ -1,7 +1,8 @@
 <?php
 namespace Rest\Api\Response;
 
-use \Rest\Api\Exception;
+use \Rest\Api;
+use \Slim;
 
 /**
  * This is the factory to create a response object depending on the HTTP
@@ -14,21 +15,21 @@ class Factory
     /**
      * The Slim request object.
      *
-     * @var \Slim\Http\Request
+     * @var Slim\Http\Request
      */
     private $_request = null;
 
     /**
      * The Slim response object.
      *
-     * @var \Slim\Http\Response
+     * @var Slim\Http\Response
      */
     private $_response = null;
 
     /**
      * The Slim response headers object.
      *
-     * @var \Slim\Http\Headers
+     * @var Slim\Http\Headers
      */
     private $_headers = null;
 
@@ -49,15 +50,15 @@ class Factory
     private $_shortName = '';
 
     /**
-     * @param \Slim\Http\Request  $request  The Slim request object.
-     * @param \Slim\Http\Response $response The Slim response object.
-     * @param \Slim\Http\Headers  $headers  The Slim response headers object.
-     * @param String              $shortName
+     * @param Slim\Http\Request  $request  The Slim request object.
+     * @param Slim\Http\Response $response The Slim response object.
+     * @param Slim\Http\Headers  $headers  The Slim response headers object.
+     * @param String             $shortName
      */
     public function __construct(
-        \Slim\Http\Request $request,
-        \Slim\Http\Response $response,
-        \Slim\Http\Headers $headers,
+        Slim\Http\Request $request,
+        Slim\Http\Response $response,
+        Slim\Http\Headers $headers,
         $shortName
     ) {
         $this->_request   = $request;
@@ -72,9 +73,9 @@ class Factory
      *
      * @param string $acceptHeader The HTTP Accept header from the request.
      *
-     * @return \Rest\Api\Response The created response object.
+     * @return Api\Response The created response object.
      *
-     * @throws \Rest\Api\Exception If no suitable $acceptHeader was given.
+     * @throws Api\Exception If no suitable $acceptHeader was given.
      */
     public function create($acceptHeader)
     {
@@ -98,7 +99,7 @@ class Factory
             return $this->_createJsonHal();
         }
 
-        throw new Exception(
+        throw new Api\Exception(
             'media type not supported (supported media types: '
             . implode(', ', array_keys($this->_supportedMediaTypes)) .  ')',
             406
@@ -108,11 +109,11 @@ class Factory
     /**
      * This function creates a JsonHal response object.
      *
-     * @return JsonHal
+     * @return Api\Response\JsonHal
      */
     private function _createJsonHal()
     {
-        return new JsonHal(
+        return new Api\Response\JsonHal(
             $this->_request,
             $this->_response,
             $this->_headers,
@@ -123,11 +124,11 @@ class Factory
     /**
      * This function creates a Json reponse object.
      *
-     * @return Json
+     * @return Api\Response\Json
      */
     private function _createJson()
     {
-        return new Json(
+        return new Api\Response\Json(
             $this->_request,
             $this->_response,
             $this->_headers,

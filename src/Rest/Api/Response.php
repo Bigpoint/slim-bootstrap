@@ -1,6 +1,9 @@
 <?php
 namespace Rest\Api;
 
+use \Rest\Api;
+use \Slim;
+
 /**
  * This interface represents the basic structure of all response classes.
  *
@@ -9,15 +12,15 @@ namespace Rest\Api;
 interface Response
 {
     /**
-     * @param \Slim\Http\Request  $request  The Slim request instance
-     * @param \Slim\Http\Response $response The Slim response instance
-     * @param \Slim\Http\Headers  $headers  The Slim request header instance
-     * @param String              $shortName
+     * @param Slim\Http\Request  $request  The Slim request instance
+     * @param Slim\Http\Response $response The Slim response instance
+     * @param Slim\Http\Headers  $headers  The Slim request header instance
+     * @param string             $shortName
      */
     public function __construct(
-        \Slim\Http\Request $request,
-        \Slim\Http\Response $response,
-        \Slim\Http\Headers $headers,
+        Slim\Http\Request $request,
+        Slim\Http\Response $response,
+        Slim\Http\Headers $headers,
         $shortName
     );
 
@@ -25,8 +28,8 @@ interface Response
      * This method is called to output the passed $data with the given
      * $statusCode.
      *
-     * @param array|DataObject $data       The actual data to output
-     * @param int              $statusCode The HTTP status code to return
+     * @param array|Api\DataObject $data       The actual data to output
+     * @param int                  $statusCode The HTTP status code to return
      */
     public function output($data, $statusCode = 200);
 }

@@ -21,7 +21,7 @@ class Factory
     }
 
     /**
-     * @return Oauth
+     * @return Api\Authentication\Oauth
      */
     public function createOauth()
     {
