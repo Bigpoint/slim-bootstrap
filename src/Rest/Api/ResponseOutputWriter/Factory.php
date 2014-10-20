@@ -85,8 +85,14 @@ class Factory
 
         $headers = preg_split('/[,;]/', $acceptHeader);
 
-        foreach ($this->_supportedMediaTypes as $mediaType => $function) {
-            if (true === in_array($mediaType, $headers)) {
+        /**
+         * Loop through accept headers and check if they are supported.
+         * Use first supported accept header and create fitting
+         * ResponseOutputWriter
+         */
+        foreach ($headers as $header) {
+            if (true === array_key_exists($header, $this->_supportedMediaTypes)) {
+                $function = $this->_supportedMediaTypes[$header];
                 $instance = $this->$function();
 
                 return $instance;

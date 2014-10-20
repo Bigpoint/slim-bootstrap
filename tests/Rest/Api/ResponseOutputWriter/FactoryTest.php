@@ -88,10 +88,10 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
             ),
             array(
                 'acceptHeader' => 'application/json,application/hal+json',
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
             ),
             array(
-                'acceptHeader' => 'application/json,application/*',
+                'acceptHeader' => 'application/json;application/*',
                 'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
             ),
         );

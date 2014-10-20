@@ -39,7 +39,7 @@ class Bootstrap
     /**
      * @var Api\ResponseOutputWriter
      */
-    private $_response = null;
+    private $_responseOutputWriter = null;
 
     /**
      * @var array
@@ -94,14 +94,14 @@ class Bootstrap
      */
     public function run()
     {
-        $response = &$this->_response;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $indexEndpoint = new Api\Endpoint\Index($this->_collectionGetEndpoints);
 
         $this->_app->get(
             '/',
-            function () use (&$response, $indexEndpoint) {
-                $response->write($indexEndpoint->get());
+            function () use (&$responseOutputWriter, $indexEndpoint) {
+                $responseOutputWriter->write($indexEndpoint->get());
             }
         )->name('index');
 
@@ -138,13 +138,13 @@ class Bootstrap
         }
 
         try {
-            $responseFactory = new Api\ResponseOutputWriter\Factory(
+            $responseOutputWriterFactory = new Api\ResponseOutputWriter\Factory(
                 $this->_app->request,
                 $this->_app->response,
                 $this->_app->response->headers,
                 $this->_applicationConfig->shortName
             );
-            $this->_response = $responseFactory->create(
+            $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
             );
 
@@ -176,12 +176,12 @@ class Bootstrap
         $name,
         Api\Endpoint\CollectionGet $endpoint
     ) {
-        $params   = $this->_params;
-        $response = &$this->_response;
+        $params               = $this->_params;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $this->_app->get(
             $route,
-            function () use (&$response, $endpoint, $params) {
+            function () use (&$responseOutputWriter, $endpoint, $params) {
                 if (false === ($endpoint instanceof Api\Endpoint\CollectionGet)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
@@ -189,7 +189,7 @@ class Bootstrap
                     );
                 }
 
-                $response->write($endpoint->get($params));
+                $responseOutputWriter->write($endpoint->get($params));
             }
         )->name($name);
 
@@ -208,12 +208,12 @@ class Bootstrap
         array $conditions,
         Api\Endpoint\RessourceGet $endpoint
     ) {
-        $app      = $this->_app;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $app->get(
             $route,
-            function () use (&$response, $endpoint, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $app) {
                 $params = func_get_args();
 
                 if (false === ($endpoint instanceof Api\Endpoint\RessourceGet)) {
@@ -224,7 +224,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->write($endpoint->get($params));
+                    $responseOutputWriter->write($endpoint->get($params));
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
@@ -245,13 +245,13 @@ class Bootstrap
         $name,
         Api\Endpoint\CollectionPost $endpoint
     ) {
-        $app      = $this->_app;
-        $params   = $this->_params;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $params               = $this->_params;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $this->_app->post(
             $route,
-            function () use (&$response, $endpoint, $params, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
                 if (false === ($endpoint instanceof Api\Endpoint\CollectionPost)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
@@ -259,7 +259,7 @@ class Bootstrap
                     );
                 }
 
-                $response->write(
+                $responseOutputWriter->write(
                     $endpoint->post($params, $app->request->post())
                 );
             }
@@ -280,12 +280,12 @@ class Bootstrap
         array $conditions,
         Api\Endpoint\RessourcePost $endpoint
     ) {
-        $app      = $this->_app;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $app->post(
             $route,
-            function () use (&$response, $endpoint, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $app) {
                 $params = func_get_args();
 
                 if (false === ($endpoint instanceof Api\Endpoint\RessourcePost)) {
@@ -296,7 +296,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->write(
+                    $responseOutputWriter->write(
                         $endpoint->post($params, $app->request->post())
                     );
                 } catch (Exception $e) {
@@ -319,13 +319,13 @@ class Bootstrap
         $name,
         Api\Endpoint\CollectionPut $endpoint
     ) {
-        $app      = $this->_app;
-        $params   = $this->_params;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $params               = $this->_params;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $this->_app->put(
             $route,
-            function () use (&$response, $endpoint, $params, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
                 if (false === ($endpoint instanceof Api\Endpoint\CollectionPut)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
@@ -333,7 +333,7 @@ class Bootstrap
                     );
                 }
 
-                $response->write(
+                $responseOutputWriter->write(
                     $endpoint->put($params, $app->request->put())
                 );
             }
@@ -354,12 +354,12 @@ class Bootstrap
         array $conditions,
         Api\Endpoint\RessourcePut $endpoint
     ) {
-        $app      = $this->_app;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $app->put(
             $route,
-            function () use (&$response, $endpoint, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $app) {
                 $params = func_get_args();
 
                 if (false === ($endpoint instanceof Api\Endpoint\RessourcePut)) {
@@ -370,7 +370,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->write(
+                    $responseOutputWriter->write(
                         $endpoint->put($params, $app->request->put())
                     );
                 } catch (Exception $e) {
