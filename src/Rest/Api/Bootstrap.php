@@ -79,7 +79,7 @@ class Bootstrap
 
         $this->_app->hook(
             'slim.before.dispatch',
-            array($this, '_authenticationHook')
+            array($this, 'authenticationHook')
         );
         $this->_app->hook(
             'slim.after.router',
@@ -114,7 +114,7 @@ class Bootstrap
      * Furthermore it sets the Access-Control-Allow-Origin to * and sets
      * the cache duration to the value specified in the config.
      */
-    private function _authenticationHook()
+    public function authenticationHook()
     {
         $this->_app->response->headers->set(
             'Access-Control-Allow-Origin',
@@ -343,9 +343,9 @@ class Bootstrap
     }
 
     /**
-     * @param String       $route
-     * @param String       $name
-     * @param array        $conditions
+     * @param String                    $route
+     * @param String                    $name
+     * @param array                     $conditions
      * @param Api\Endpoint\RessourcePut $endpoint
      */
     public function addRessourcePutEndpoint(
