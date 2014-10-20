@@ -88,6 +88,12 @@ class Bootstrap
             $authentication = $this->_authentication;
         }
 
+        /**
+         * This hook is run before the actual route is dispatched and enforces
+         * the authentication and ACL if these are provided.
+         * Furthermore it sets the Access-Control-Allow-Origin to * and sets
+         * the cache duration to the value specified in the config.
+         */
         $app->hook(
             'slim.before.dispatch',
             function () use (
