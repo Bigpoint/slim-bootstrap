@@ -59,24 +59,73 @@ class Bootstrap
         $this->_applicationConfig = $applicationConfig;
         $this->_authentication    = $authentication;
         $this->_aclConfig         = $aclConfig;
-        $this->_app               = new Slim\Slim(
+    }
+
+    /**
+     * This methods initializes the Slim object and defines a few hooks.
+     */
+    public function init()
+    {
+        $this->_app = new Slim\Slim(
             array(
-                'debug' => $applicationConfig->debug,
+                'debug' => $this->_applicationConfig->debug,
             )
         );
 
         $this->_params = $this->_app->request->get();
         unset($this->_params['token']);
+
+        $app      = $this->_app;
+        $response = &$this->_response;
+
+        $this->_app->hook(
+            'slim.before.dispatch',
+            array($this, '_authenticationHook')
+        );
+        $this->_app->hook(
+            'slim.after.router',
+            function () use ($app) {
+                $app->etag(md5($app->response->getBody()));
+            }
+        );
+
+
+        $indexEndpoint = new Api\Endpoint\Index($this->_collectionGetEndpoints);
+
+        $this->_app->get(
+            '/',
+            function () use (&$response, $indexEndpoint) {
+                $response->output($indexEndpoint->get());
+            }
+        )->name('index');
     }
 
     /**
-     * @return Slim\Slim
+     * This function starts the Slim framework by calling it's run() method.
      */
-    public function setUp()
+    public function run()
     {
-        $applicationConfig = $this->_applicationConfig;
-        $app               = $this->_app;
-        $response          = &$this->_response;
+        $this->_app->run();
+    }
+
+    /**
+     * This hook is run before the actual route is dispatched and enforces
+     * the authentication and ACL if these are provided.
+     * Furthermore it sets the Access-Control-Allow-Origin to * and sets
+     * the cache duration to the value specified in the config.
+     */
+    private function _authenticationHook()
+    {
+        $this->_app->response->headers->set(
+            'Access-Control-Allow-Origin',
+            '*'
+        );
+        $this->_app->expires(
+            date(
+                'D, d M Y H:i:s O',
+                time() + $this->_applicationConfig->cacheDuration
+            )
+        );
 
         $acl            = null;
         $authentication = null;
@@ -88,80 +137,33 @@ class Bootstrap
             $authentication = $this->_authentication;
         }
 
-        /**
-         * This hook is run before the actual route is dispatched and enforces
-         * the authentication and ACL if these are provided.
-         * Furthermore it sets the Access-Control-Allow-Origin to * and sets
-         * the cache duration to the value specified in the config.
-         */
-        $app->hook(
-            'slim.before.dispatch',
-            function () use (
-                $app,
-                &$response,
-                $authentication,
-                $acl,
-                $applicationConfig
-            ) {
-                $app->response->headers->set(
-                    'Access-Control-Allow-Origin',
-                    '*'
-                );
-                $app->expires(
-                    date(
-                        'D, d M Y H:i:s O',
-                        time() + $applicationConfig->cacheDuration
-                    )
+        try {
+            $responseFactory = new Api\Response\Factory(
+                $this->_app->request,
+                $this->_app->response,
+                $this->_app->response->headers,
+                $this->_applicationConfig->shortName
+            );
+            $this->_response = $responseFactory->create(
+                $this->_app->request->headers->get('Accept')
+            );
+
+            if (null !== $authentication && null !== $acl) {
+                $clientId = $authentication->authenticate(
+                    $this->_app->request->get('token')
                 );
 
-                try {
-                    $responseFactory = new Api\Response\Factory(
-                        $app->request,
-                        $app->response,
-                        $app->response->headers,
-                        $applicationConfig->shortName
-                    );
-                    $response        = $responseFactory->create(
-                        $app->request->headers->get('Accept')
-                    );
-
-                    if (null !== $authentication && null !== $acl) {
-                        $clientId = $authentication->authenticate(
-                            $app->request->get('token')
-                        );
-
-                        $acl->access(
-                            $clientId,
-                            $app->router()->getCurrentRoute()->getName()
-                        );
-                    }
-                } catch (Exception $e) {
-                    $app->response->setStatus($e->getCode());
-                    $app->response->setBody($e->getMessage());
-
-                    $app->stop();
-                }
+                $acl->access(
+                    $clientId,
+                    $this->_app->router()->getCurrentRoute()->getName()
+                );
             }
-        );
-        $app->hook(
-            'slim.after.router',
-            function () use ($app) {
-                $app->etag(md5($app->response->getBody()));
-            }
-        );
+        } catch (Exception $e) {
+            $this->_app->response->setStatus($e->getCode());
+            $this->_app->response->setBody($e->getMessage());
 
-
-        $indexEndpoint = new Api\Endpoint\Index($this->_collectionGetEndpoints);
-
-        $app->get(
-            '/',
-            function () use (&$response, $indexEndpoint) {
-                $response->output($indexEndpoint->get());
-            }
-        )->name('index');
-
-
-        return $app;
+            $this->_app->stop();
+        }
     }
 
     /**
