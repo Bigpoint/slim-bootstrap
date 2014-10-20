@@ -9,7 +9,7 @@ use \Slim;
  *
  * @package Rest\Api
  */
-interface Response
+interface ResponseOutputWriter
 {
     /**
      * @param Slim\Http\Request  $request  The Slim request instance
@@ -31,5 +31,5 @@ interface Response
      * @param array|Api\DataObject $data       The actual data to output
      * @param int                  $statusCode The HTTP status code to return
      */
-    public function output($data, $statusCode = 200);
+    public function write($data, $statusCode = 200);
 }

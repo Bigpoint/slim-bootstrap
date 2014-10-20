@@ -1,5 +1,5 @@
 <?php
-namespace Rest\Api\Response;
+namespace Rest\Api\ResponseOutputWriter;
 
 use \Nocarrier as hal;
 use \Rest\Api;
@@ -9,9 +9,9 @@ use \Slim;
  * This class is responsible to output the data to the client in valid
  * HAL+JSON format.
  *
- * @package Rest\Api\Response
+ * @package Rest\Api\ResponseOutputWriter
  */
-class JsonHal implements Api\Response
+class JsonHal implements Api\ResponseOutputWriter
 {
     /**
      * The Slim request object.
@@ -65,7 +65,7 @@ class JsonHal implements Api\Response
      * @param int                  $statusCode The status code to set in the
      *                                         reponse
      */
-    public function output($data, $statusCode = 200)
+    public function write($data, $statusCode = 200)
     {
         $path = $this->_request->getPath();
         $hal  = new hal\Hal($path);

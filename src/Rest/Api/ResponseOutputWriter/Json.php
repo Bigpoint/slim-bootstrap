@@ -1,5 +1,5 @@
 <?php
-namespace Rest\Api\Response;
+namespace Rest\Api\ResponseOutputWriter;
 
 use \Rest\Api;
 use \Slim;
@@ -8,9 +8,9 @@ use \Slim;
  * This class is responsible to output the data to the client in valid JSON
  * format.
  *
- * @package Rest\Api\Response
+ * @package Rest\Api\ResponseOutputWriter
  */
-class Json implements Api\Response
+class Json implements Api\ResponseOutputWriter
 {
     /**
      * The Slim request object.
@@ -58,7 +58,7 @@ class Json implements Api\Response
      * @param int                  $statusCode The status code to set in the
      *                                         reponse
      */
-    public function output($data, $statusCode = 200)
+    public function write($data, $statusCode = 200)
     {
         $result = array();
 

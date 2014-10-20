@@ -1,5 +1,5 @@
 <?php
-namespace Rest\Api\Response;
+namespace Rest\Api\ResponseOutputWriter;
 
 use \Rest\Api;
 use \Slim;
@@ -8,7 +8,7 @@ use \Slim;
  * This is the factory to create a response object depending on the HTTP
  * Accept header in the request.
  *
- * @package Pit\Api\Response
+ * @package Pit\Api\ResponseOutputWriter
  */
 class Factory
 {
@@ -73,7 +73,7 @@ class Factory
      *
      * @param string $acceptHeader The HTTP Accept header from the request.
      *
-     * @return Api\Response The created response object.
+     * @return Api\ResponseOutputWriter The created response object.
      *
      * @throws Api\Exception If no suitable $acceptHeader was given.
      */
@@ -109,11 +109,11 @@ class Factory
     /**
      * This function creates a JsonHal response object.
      *
-     * @return Api\Response\JsonHal
+     * @return Api\ResponseOutputWriter\JsonHal
      */
     private function _createJsonHal()
     {
-        return new Api\Response\JsonHal(
+        return new Api\ResponseOutputWriter\JsonHal(
             $this->_request,
             $this->_response,
             $this->_headers,
@@ -124,11 +124,11 @@ class Factory
     /**
      * This function creates a Json reponse object.
      *
-     * @return Api\Response\Json
+     * @return Api\ResponseOutputWriter\Json
      */
     private function _createJson()
     {
-        return new Api\Response\Json(
+        return new Api\ResponseOutputWriter\Json(
             $this->_request,
             $this->_response,
             $this->_headers,

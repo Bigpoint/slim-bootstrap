@@ -37,7 +37,7 @@ class Bootstrap
     private $_app = null;
 
     /**
-     * @var Api\Response
+     * @var Api\ResponseOutputWriter
      */
     private $_response = null;
 
@@ -101,7 +101,7 @@ class Bootstrap
         $this->_app->get(
             '/',
             function () use (&$response, $indexEndpoint) {
-                $response->output($indexEndpoint->get());
+                $response->write($indexEndpoint->get());
             }
         )->name('index');
 
@@ -138,7 +138,7 @@ class Bootstrap
         }
 
         try {
-            $responseFactory = new Api\Response\Factory(
+            $responseFactory = new Api\ResponseOutputWriter\Factory(
                 $this->_app->request,
                 $this->_app->response,
                 $this->_app->response->headers,
@@ -189,7 +189,7 @@ class Bootstrap
                     );
                 }
 
-                $response->output($endpoint->get($params));
+                $response->write($endpoint->get($params));
             }
         )->name($name);
 
@@ -224,7 +224,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output($endpoint->get($params));
+                    $response->write($endpoint->get($params));
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
@@ -259,7 +259,7 @@ class Bootstrap
                     );
                 }
 
-                $response->output(
+                $response->write(
                     $endpoint->post($params, $app->request->post())
                 );
             }
@@ -296,7 +296,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output(
+                    $response->write(
                         $endpoint->post($params, $app->request->post())
                     );
                 } catch (Exception $e) {
@@ -333,7 +333,7 @@ class Bootstrap
                     );
                 }
 
-                $response->output(
+                $response->write(
                     $endpoint->put($params, $app->request->put())
                 );
             }
@@ -370,7 +370,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output(
+                    $response->write(
                         $endpoint->put($params, $app->request->put())
                     );
                 } catch (Exception $e) {
