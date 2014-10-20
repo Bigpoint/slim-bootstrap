@@ -1,7 +1,7 @@
 <?php
 namespace Rest\Api\Endpoint;
 
-use \Rest\Api\DataObject;
+use \Rest\Api;
 
 /**
  * This class represents the index endpoint.
@@ -29,7 +29,7 @@ class Index
      * This function creates a ressource that has links to all existing
      * endpoints.
      *
-     * @return DataObject
+     * @return Api\DataObject
      */
     public function get()
     {
@@ -39,7 +39,7 @@ class Index
             $links[$endpoint] = '/' . $endpoint;
         }
 
-        return new DataObject(
+        return new Api\DataObject(
             array(),
             array(
                 'welcome' => 'Welcome.',

@@ -1,48 +1,48 @@
 <?php
-namespace Rest\Api\Response;
+namespace Rest\Api\ResponseOutputWriter;
 
-use \Rest\Api\DataObject;
-use \Rest\Api\Response;
+use \Rest\Api;
+use \Slim;
 
 /**
  * This class is responsible to output the data to the client in valid JSON
  * format.
  *
- * @package Rest\Api\Response
+ * @package Rest\Api\ResponseOutputWriter
  */
-class Json implements Response
+class Json implements Api\ResponseOutputWriter
 {
     /**
      * The Slim request object.
      *
-     * @var \Slim\Http\Request
+     * @var Slim\Http\Request
      */
     private $_request = null;
 
     /**
      * The Slim response object.
      *
-     * @var \Slim\Http\Response
+     * @var Slim\Http\Response
      */
     private $_response = null;
 
     /**
      * The Slim response headers object.
      *
-     * @var \Slim\Http\Headers
+     * @var Slim\Http\Headers
      */
     private $_headers = null;
 
     /**
-     * @param \Slim\Http\Request  $request  The Slim request object.
-     * @param \Slim\Http\Response $response The Slim response object.
-     * @param \Slim\Http\Headers  $headers  The Slim response headers object.
-     * @param String              $shortName
+     * @param Slim\Http\Request  $request  The Slim request object.
+     * @param Slim\Http\Response $response The Slim response object.
+     * @param Slim\Http\Headers  $headers  The Slim response headers object.
+     * @param String             $shortName
      */
     public function __construct(
-        \Slim\Http\Request $request,
-        \Slim\Http\Response $response,
-        \Slim\Http\Headers $headers,
+        Slim\Http\Request $request,
+        Slim\Http\Response $response,
+        Slim\Http\Headers $headers,
         $shortName
     ) {
         $this->_request  = $request;
@@ -54,16 +54,17 @@ class Json implements Response
      * This function outputs the given $data as valid JSON to the client
      * and sets the HTTP Response Code to the given $statusCode.
      *
-     * @param array|DataObject $data       The data to output to the client
-     * @param int              $statusCode The status code to set in the reponse
+     * @param array|Api\DataObject $data       The data to output to the client
+     * @param int                  $statusCode The status code to set in the
+     *                                         reponse
      */
-    public function output($data, $statusCode = 200)
+    public function write($data, $statusCode = 200)
     {
         $result = array();
 
         if (true === is_array($data)) {
             foreach ($data as $entry) {
-                /** @var DataObject $entry */
+                /** @var Api\DataObject $entry */
                 $identifiers = array_values($entry->getIdentifiers());
 
                 $this->_buildStructure($entry, $identifiers, 0, $result);
@@ -86,16 +87,16 @@ class Json implements Response
     /**
      * Creates a structured array for each given DataObject.
      *
-     * @param DataObject $data        The DataObject to get the actual payload
-     *                                from
-     * @param array      $identifiers The identifiers to build the array
-     *                                structure
-     * @param int        $index       The index of the current element in the
-     *                                identifiers array
-     * @param array      $result      Reference of the result array to fill
+     * @param Api\DataObject $data        The DataObject to get the actual
+     *                                    payload from
+     * @param array          $identifiers The identifiers to build the array
+     *                                    structure
+     * @param int            $index       The index of the current element in
+     *                                    the identifiers array
+     * @param array          $result      Reference of the result array to fill
      */
     private function _buildStructure(
-        DataObject $data,
+        Api\DataObject $data,
         array $identifiers,
         $index,
         array &$result

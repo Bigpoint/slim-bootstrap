@@ -1,15 +1,8 @@
 <?php
 namespace Rest\Api;
 
-use \Rest\Api\Endpoint\CollectionGet;
-use \Rest\Api\Endpoint\CollectionPost;
-use \Rest\Api\Endpoint\CollectionPut;
-use \Rest\Api\Endpoint\Index;
-use \Rest\Api\Endpoint\RessourceGet;
-use \Rest\Api\Endpoint\RessourcePost;
-use \Rest\Api\Endpoint\RessourcePut;
-use \Rest\Api\Response\Factory;
-use \Slim\Slim;
+use \Rest\Api;
+use \Slim;
 
 /**
  * Class Bootstrap
@@ -24,7 +17,7 @@ class Bootstrap
     private $_applicationConfig = null;
 
     /**
-     * @var Authentication
+     * @var Api\Authentication
      */
     private $_authentication = null;
 
@@ -39,14 +32,14 @@ class Bootstrap
     private $_collectionGetEndpoints = array();
 
     /**
-     * @var Slim
+     * @var Slim\Slim
      */
     private $_app = null;
 
     /**
-     * @var Response
+     * @var Api\ResponseOutputWriter
      */
-    private $_response = null;
+    private $_responseOutputWriter = null;
 
     /**
      * @var array
@@ -55,140 +48,148 @@ class Bootstrap
 
     /**
      * @param \stdClass $applicationConfig
-     * @param Authentication $authentication
+     * @param Api\Authentication $authentication
      * @param \stdClass $aclConfig
      */
     public function __construct(
         \stdClass $applicationConfig,
-        Authentication $authentication = null,
+        Api\Authentication $authentication = null,
         \stdClass $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_authentication    = $authentication;
         $this->_aclConfig         = $aclConfig;
-        $this->_app               = new Slim(
+    }
+
+    /**
+     * This methods initializes the Slim object and defines a few hooks.
+     */
+    public function init()
+    {
+        $this->_app = new Slim\Slim(
             array(
-                'debug' => $applicationConfig->debug,
+                'debug' => $this->_applicationConfig->debug,
             )
         );
 
         $this->_params = $this->_app->request->get();
         unset($this->_params['token']);
-    }
 
-    /**
-     * @return Slim
-     */
-    public function setUp()
-    {
-        $applicationConfig = $this->_applicationConfig;
-        $app               = $this->_app;
-        $response          = &$this->_response;
-        
-        $acl            = null;
-        $authentication = null;
-            
-        if (null !== $this->_aclConfig
-            && null !== $this->_authentication
-        ) {
-            $acl            = new Acl($this->_aclConfig);
-            $authentication = $this->_authentication;
-        }
+        $app = $this->_app;
 
-        $app->hook(
+        $this->_app->hook(
             'slim.before.dispatch',
-            function () use (
-                $app,
-                &$response,
-                $authentication,
-                $acl,
-                $applicationConfig
-            ) {
-                $app->response->headers->set(
-                    'Access-Control-Allow-Origin',
-                    '*'
-                );
-                $app->expires(
-                    date(
-                        'D, d M Y H:i:s O',
-                        time() + $applicationConfig->cacheDuration
-                    )
-                );
-
-                try {
-                    $responseFactory = new Factory(
-                        $app->request,
-                        $app->response,
-                        $app->response->headers,
-                        $applicationConfig->shortName
-                    );
-                    $response        = $responseFactory->create(
-                        $app->request->headers->get('Accept')
-                    );
-
-                    if (null !== $authentication && null !== $acl) {
-                        $clientId = $authentication->authenticate(
-                            $app->request->get('token')
-                        );
-
-                        $acl->access(
-                            $clientId,
-                            $app->router()->getCurrentRoute()->getName()
-                        );
-                    }
-                } catch (Exception $e) {
-                    $app->response->setStatus($e->getCode());
-                    $app->response->setBody($e->getMessage());
-
-                    $app->stop();
-                }
-            }
+            array($this, 'authenticationHook')
         );
-        $app->hook(
+        $this->_app->hook(
             'slim.after.router',
             function () use ($app) {
                 $app->etag(md5($app->response->getBody()));
             }
         );
-
-
-        $indexEndpoint = new Index($this->_collectionGetEndpoints);
-
-        $app->get(
-            '/',
-            function () use (&$response, $indexEndpoint) {
-                $response->output($indexEndpoint->get());
-            }
-        )->name('index');
-
-
-        return $app;
     }
 
     /**
-     * @param String        $route
-     * @param String        $name
-     * @param CollectionGet $endpoint
+     * This function starts the Slim framework by calling it's run() method.
+     */
+    public function run()
+    {
+        $responseOutputWriter = &$this->_responseOutputWriter;
+
+        $indexEndpoint = new Api\Endpoint\Index($this->_collectionGetEndpoints);
+
+        $this->_app->get(
+            '/',
+            function () use (&$responseOutputWriter, $indexEndpoint) {
+                $responseOutputWriter->write($indexEndpoint->get());
+            }
+        )->name('index');
+
+        $this->_app->run();
+    }
+
+    /**
+     * This hook is run before the actual route is dispatched and enforces
+     * the authentication and ACL if these are provided.
+     * Furthermore it sets the Access-Control-Allow-Origin to * and sets
+     * the cache duration to the value specified in the config.
+     */
+    public function authenticationHook()
+    {
+        $this->_app->response->headers->set(
+            'Access-Control-Allow-Origin',
+            '*'
+        );
+        $this->_app->expires(
+            date(
+                'D, d M Y H:i:s O',
+                time() + $this->_applicationConfig->cacheDuration
+            )
+        );
+
+        $acl            = null;
+        $authentication = null;
+
+        if (null !== $this->_aclConfig
+            && null !== $this->_authentication
+        ) {
+            $acl            = new Api\Acl($this->_aclConfig);
+            $authentication = $this->_authentication;
+        }
+
+        try {
+            $responseOutputWriterFactory = new Api\ResponseOutputWriter\Factory(
+                $this->_app->request,
+                $this->_app->response,
+                $this->_app->response->headers,
+                $this->_applicationConfig->shortName
+            );
+            $this->_responseOutputWriter = $responseOutputWriterFactory->create(
+                $this->_app->request->headers->get('Accept')
+            );
+
+            if (null !== $authentication && null !== $acl) {
+                $clientId = $authentication->authenticate(
+                    $this->_app->request->get('token')
+                );
+
+                $acl->access(
+                    $clientId,
+                    $this->_app->router()->getCurrentRoute()->getName()
+                );
+            }
+        } catch (Exception $e) {
+            $this->_app->response->setStatus($e->getCode());
+            $this->_app->response->setBody($e->getMessage());
+
+            $this->_app->stop();
+        }
+    }
+
+    /**
+     * @param String                     $route
+     * @param String                     $name
+     * @param Api\Endpoint\CollectionGet $endpoint
      */
     public function addCollectionGetEndpoint(
         $route,
         $name,
-        CollectionGet $endpoint
+        Api\Endpoint\CollectionGet $endpoint
     ) {
-        $params   = $this->_params;
-        $response = &$this->_response;
+        $params               = $this->_params;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $this->_app->get(
             $route,
-            function () use (&$response, $endpoint, $params) {
-                if (false === ($endpoint instanceof CollectionGet)) {
+            function () use (&$responseOutputWriter, $endpoint, $params) {
+                if (false === ($endpoint instanceof Api\Endpoint\CollectionGet)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid collection GET endpoint'
                     );
                 }
 
-                $response->output($endpoint->get($params));
+                $responseOutputWriter->write($endpoint->get($params));
             }
         )->name($name);
 
@@ -196,26 +197,26 @@ class Bootstrap
     }
 
     /**
-     * @param String       $route
-     * @param String       $name
-     * @param array        $conditions
-     * @param RessourceGet $endpoint
+     * @param String                    $route
+     * @param String                    $name
+     * @param array                     $conditions
+     * @param Api\Endpoint\RessourceGet $endpoint
      */
     public function addRessourceGetEndpoint(
         $route,
         $name,
         array $conditions,
-        RessourceGet $endpoint
+        Api\Endpoint\RessourceGet $endpoint
     ) {
-        $app      = $this->_app;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $app->get(
             $route,
-            function () use (&$response, $endpoint, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $app) {
                 $params = func_get_args();
 
-                if (false === ($endpoint instanceof RessourceGet)) {
+                if (false === ($endpoint instanceof Api\Endpoint\RessourceGet)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource GET endpoint'
@@ -223,7 +224,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output($endpoint->get($params));
+                    $responseOutputWriter->write($endpoint->get($params));
                 } catch (Exception $e) {
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
@@ -235,30 +236,30 @@ class Bootstrap
     }
 
     /**
-     * @param String         $route
-     * @param String         $name
-     * @param CollectionPost $endpoint
+     * @param String                      $route
+     * @param String                      $name
+     * @param Api\Endpoint\CollectionPost $endpoint
      */
     public function addCollectionPostEndpoint(
         $route,
         $name,
-        CollectionPost $endpoint
+        Api\Endpoint\CollectionPost $endpoint
     ) {
-        $app      = $this->_app;
-        $params   = $this->_params;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $params               = $this->_params;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $this->_app->post(
             $route,
-            function () use (&$response, $endpoint, $params, $app) {
-                if (false === ($endpoint instanceof CollectionPost)) {
+            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
+                if (false === ($endpoint instanceof Api\Endpoint\CollectionPost)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid collection POST endpoint'
                     );
                 }
 
-                $response->output(
+                $responseOutputWriter->write(
                     $endpoint->post($params, $app->request->post())
                 );
             }
@@ -268,26 +269,26 @@ class Bootstrap
     }
 
     /**
-     * @param String        $route
-     * @param String        $name
-     * @param array         $conditions
-     * @param RessourcePost $endpoint
+     * @param String                     $route
+     * @param String                     $name
+     * @param array                      $conditions
+     * @param Api\Endpoint\RessourcePost $endpoint
      */
     public function addRessourcePostEndpoint(
         $route,
         $name,
         array $conditions,
-        RessourcePost $endpoint
+        Api\Endpoint\RessourcePost $endpoint
     ) {
-        $app      = $this->_app;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $app->post(
             $route,
-            function () use (&$response, $endpoint, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $app) {
                 $params = func_get_args();
 
-                if (false === ($endpoint instanceof RessourcePost)) {
+                if (false === ($endpoint instanceof Api\Endpoint\RessourcePost)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource POST endpoint'
@@ -295,7 +296,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output(
+                    $responseOutputWriter->write(
                         $endpoint->post($params, $app->request->post())
                     );
                 } catch (Exception $e) {
@@ -309,30 +310,30 @@ class Bootstrap
     }
 
     /**
-     * @param String        $route
-     * @param String        $name
-     * @param CollectionPut $endpoint
+     * @param String                     $route
+     * @param String                     $name
+     * @param Api\Endpoint\CollectionPut $endpoint
      */
     public function addCollectionPutEndpoint(
         $route,
         $name,
-        CollectionPut $endpoint
+        Api\Endpoint\CollectionPut $endpoint
     ) {
-        $app      = $this->_app;
-        $params   = $this->_params;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $params               = $this->_params;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $this->_app->put(
             $route,
-            function () use (&$response, $endpoint, $params, $app) {
-                if (false === ($endpoint instanceof CollectionPut)) {
+            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
+                if (false === ($endpoint instanceof Api\Endpoint\CollectionPut)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid collection PUT endpoint'
                     );
                 }
 
-                $response->output(
+                $responseOutputWriter->write(
                     $endpoint->put($params, $app->request->put())
                 );
             }
@@ -342,26 +343,26 @@ class Bootstrap
     }
 
     /**
-     * @param String       $route
-     * @param String       $name
-     * @param array        $conditions
-     * @param RessourcePut $endpoint
+     * @param String                    $route
+     * @param String                    $name
+     * @param array                     $conditions
+     * @param Api\Endpoint\RessourcePut $endpoint
      */
     public function addRessourcePutEndpoint(
         $route,
         $name,
         array $conditions,
-        RessourcePut $endpoint
+        Api\Endpoint\RessourcePut $endpoint
     ) {
-        $app      = $this->_app;
-        $response = &$this->_response;
+        $app                  = $this->_app;
+        $responseOutputWriter = &$this->_responseOutputWriter;
 
         $app->put(
             $route,
-            function () use (&$response, $endpoint, $app) {
+            function () use (&$responseOutputWriter, $endpoint, $app) {
                 $params = func_get_args();
 
-                if (false === ($endpoint instanceof RessourcePut)) {
+                if (false === ($endpoint instanceof Api\Endpoint\RessourcePut)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource PUT endpoint'
@@ -369,7 +370,7 @@ class Bootstrap
                 }
 
                 try {
-                    $response->output(
+                    $responseOutputWriter->write(
                         $endpoint->put($params, $app->request->put())
                     );
                 } catch (Exception $e) {

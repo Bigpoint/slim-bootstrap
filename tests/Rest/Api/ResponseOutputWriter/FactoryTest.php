@@ -1,10 +1,10 @@
 <?php
-namespace Rest\Api\Response;
+namespace Rest\Api\ResponseOutputWriter;
 
 /**
  * Class FactoryTest
  *
- * @package Rest\Api\Response
+ * @package Rest\Api\ResponseOutputWriter
  */
 class FactoryTest extends \PHPUnit_Framework_TestCase
 {
@@ -24,7 +24,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
     private $_mockHeaders = null;
 
     /**
-     * @var \Rest\Api\Response\Factory
+     * @var \Rest\Api\ResponseOutputWriter\Factory
      */
     private $_candidate = null;
 
@@ -68,31 +68,31 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 'acceptHeader' => null,
-                'instance'     => 'Rest\\Api\\Response\\JsonHal',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
             ),
             array(
                 'acceptHeader' => 'application/hal+json',
-                'instance'     => 'Rest\\Api\\Response\\JsonHal',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
             ),
             array(
                 'acceptHeader' => 'application/*',
-                'instance'     => 'Rest\\Api\\Response\\JsonHal',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
             ),
             array(
                 'acceptHeader' => '*/*',
-                'instance'     => 'Rest\\Api\\Response\\JsonHal',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
             ),
             array(
                 'acceptHeader' => 'application/json',
-                'instance'     => 'Rest\\Api\\Response\\Json',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
             ),
             array(
                 'acceptHeader' => 'application/json,application/hal+json',
-                'instance'     => 'Rest\\Api\\Response\\JsonHal',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
             ),
             array(
-                'acceptHeader' => 'application/json,application/*',
-                'instance'     => 'Rest\\Api\\Response\\Json',
+                'acceptHeader' => 'application/json;application/*',
+                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
             ),
         );
     }
