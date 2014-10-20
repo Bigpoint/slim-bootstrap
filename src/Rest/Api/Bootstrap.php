@@ -75,8 +75,7 @@ class Bootstrap
         $this->_params = $this->_app->request->get();
         unset($this->_params['token']);
 
-        $app      = $this->_app;
-        $response = &$this->_response;
+        $app = $this->_app;
 
         $this->_app->hook(
             'slim.before.dispatch',
@@ -88,7 +87,14 @@ class Bootstrap
                 $app->etag(md5($app->response->getBody()));
             }
         );
+    }
 
+    /**
+     * This function starts the Slim framework by calling it's run() method.
+     */
+    public function run()
+    {
+        $response = &$this->_response;
 
         $indexEndpoint = new Api\Endpoint\Index($this->_collectionGetEndpoints);
 
@@ -98,13 +104,7 @@ class Bootstrap
                 $response->output($indexEndpoint->get());
             }
         )->name('index');
-    }
 
-    /**
-     * This function starts the Slim framework by calling it's run() method.
-     */
-    public function run()
-    {
         $this->_app->run();
     }
 
