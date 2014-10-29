@@ -153,6 +153,16 @@ class Bootstrap
                     $this->_app->request->get('token')
                 );
 
+                /*
+                 * Inject the clientId into the parameters.
+                 * We have to get all parameters, change the array and set it
+                 * again because slim doesn't allow to set a new parameter
+                 * directly.
+                 */
+                $params = $this->_app->router()->getCurrentRoute()->getParams();
+                $params['clientId'] = $clientId;
+                $this->_app->router()->getCurrentRoute()->setParams($params);
+
                 $acl->access(
                     $clientId,
                     $this->_app->router()->getCurrentRoute()->getName()
@@ -176,16 +186,23 @@ class Bootstrap
         $name,
         Api\Endpoint\CollectionGet $endpoint
     ) {
+        $app                  = $this->_app;
         $params               = $this->_params;
         $responseOutputWriter = &$this->_responseOutputWriter;
 
         $this->_app->get(
             $route,
-            function () use (&$responseOutputWriter, $endpoint, $params) {
+            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
                 if (false === ($endpoint instanceof Api\Endpoint\CollectionGet)) {
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid collection GET endpoint'
+                    );
+                }
+
+                if ($endpoint instanceof Api\Endpoint\InjectClientId) {
+                    $endpoint->setClientId(
+                        $app->router()->getCurrentRoute()->getParam('clientId')
                     );
                 }
 
@@ -220,6 +237,12 @@ class Bootstrap
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource GET endpoint'
+                    );
+                }
+
+                if ($endpoint instanceof Api\Endpoint\InjectClientId) {
+                    $endpoint->setClientId(
+                        $app->router()->getCurrentRoute()->getParam('clientId')
                     );
                 }
 
@@ -259,6 +282,12 @@ class Bootstrap
                     );
                 }
 
+                if ($endpoint instanceof Api\Endpoint\InjectClientId) {
+                    $endpoint->setClientId(
+                        $app->router()->getCurrentRoute()->getParam('clientId')
+                    );
+                }
+
                 $responseOutputWriter->write(
                     $endpoint->post($params, $app->request->post())
                 );
@@ -292,6 +321,12 @@ class Bootstrap
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource POST endpoint'
+                    );
+                }
+
+                if ($endpoint instanceof Api\Endpoint\InjectClientId) {
+                    $endpoint->setClientId(
+                        $app->router()->getCurrentRoute()->getParam('clientId')
                     );
                 }
 
@@ -333,6 +368,12 @@ class Bootstrap
                     );
                 }
 
+                if ($endpoint instanceof Api\Endpoint\InjectClientId) {
+                    $endpoint->setClientId(
+                        $app->router()->getCurrentRoute()->getParam('clientId')
+                    );
+                }
+
                 $responseOutputWriter->write(
                     $endpoint->put($params, $app->request->put())
                 );
@@ -366,6 +407,12 @@ class Bootstrap
                     throw new Exception(
                         'endpoint "' . get_class($endpoint)
                         . '" is not a valid ressource PUT endpoint'
+                    );
+                }
+
+                if ($endpoint instanceof Api\Endpoint\InjectClientId) {
+                    $endpoint->setClientId(
+                        $app->router()->getCurrentRoute()->getParam('clientId')
                     );
                 }
 
