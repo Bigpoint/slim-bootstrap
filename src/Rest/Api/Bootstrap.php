@@ -66,9 +66,23 @@ class Bootstrap
      */
     public function init()
     {
+        $loggerFactory = new \Logger\Factory(
+            $this->_applicationConfig['monolog']
+        );
+        $handlers = $loggerFactory->createHandlers(
+            $this->_applicationConfig['monolog']['logger']['slim']
+        );
+
+        $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(
+            array(
+                'handlers' => $handlers,
+            )
+        );
+
         $this->_app = new Slim\Slim(
             array(
-                'debug' => $this->_applicationConfig->debug,
+                'debug'      => $this->_applicationConfig->debug,
+                'log.writer' => $logger,
             )
         );
 
