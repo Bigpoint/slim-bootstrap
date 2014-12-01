@@ -1,6 +1,7 @@
 <?php
 namespace Rest\Api\Authentication;
 
+use \Monolog;
 use \Rest\Api;
 use \Slim;
 
@@ -22,10 +23,10 @@ class Factory
     private $_logger = null;
 
     /**
-     * @param array    $config
-     * @param Slim\Log $logger
+     * @param array          $config
+     * @param Monolog\Logger $logger
      */
-    public function __construct(array $config, Slim\Log $logger)
+    public function __construct(array $config, Monolog\Logger $logger)
     {
         $this->_config = $config;
         $this->_logger = $logger;

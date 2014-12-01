@@ -1,6 +1,7 @@
 <?php
 namespace Rest\Api\Authentication;
 
+use \Monolog;
 use \Rest\Api;
 use \Slim;
 
@@ -21,15 +22,15 @@ class Oauth implements Api\Authentication
     private $_apiUrl = '';
 
     /**
-     * @var Slim\Log
+     * @var Monolog\Logger
      */
     private $_logger = null;
 
     /**
-     * @param string   $apiUrl URL of the P2 authentication service
-     * @param Slim\Log $logger Logger instance
+     * @param string         $apiUrl URL of the P2 authentication service
+     * @param Monolog\Logger $logger Logger instance
      */
-    public function __construct($apiUrl, Slim\Log $logger)
+    public function __construct($apiUrl, Monolog\Logger $logger)
     {
         $this->_apiUrl = $apiUrl;
         $this->_logger = $logger;
@@ -69,7 +70,7 @@ class Oauth implements Api\Authentication
 
         $url = $this->_apiUrl . $token;
 
-        $this->_logger->debug('calling GET: ' . $url);
+        $this->_logger->addDebug('calling GET: ' . $url);
 
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -87,19 +88,19 @@ class Oauth implements Api\Authentication
         $curlError    = curl_error($ch);
 
         if (0 !== $curlErrno) {
-            $this->_logger->error(
+            $this->_logger->addError(
                 'curl error (' . $curlErrno . '): ' . $curlError
             );
         }
 
         if ($responseCode >= 400) {
-            $this->_logger->error('curl call error: ' . $responseCode);
+            $this->_logger->addError('curl call error: ' . $responseCode);
 
         } elseif ($responseCode >= 300) {
-            $this->_logger->warning('curl call warning: ' . $responseCode);
+            $this->_logger->addWarning('curl call warning: ' . $responseCode);
         }
 
-        $this->_logger->debug(
+        $this->_logger->addDebug(
             'result: (' . $responseCode . ') ' . var_export($result, true)
         );
 
