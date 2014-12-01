@@ -2,6 +2,7 @@
 namespace Rest\Api\Authentication;
 
 use \Rest\Api;
+use \Slim;
 
 /**
  * Class Factory
@@ -15,9 +16,19 @@ class Factory
      */
     private $_config = null;
 
-    public function __construct(array $config)
+    /**
+     * @var Slim\Log
+     */
+    private $_logger = null;
+
+    /**
+     * @param array    $config
+     * @param Slim\Log $logger
+     */
+    public function __construct(array $config, Slim\Log $logger)
     {
         $this->_config = $config;
+        $this->_logger = $logger;
     }
 
     /**
@@ -25,6 +36,9 @@ class Factory
      */
     public function createOauth()
     {
-        return new Api\Authentication\Oauth($this->_config['apiUrl']);
+        return new Api\Authentication\Oauth(
+            $this->_config['apiUrl'],
+            $this->_logger
+        );
     }
 }

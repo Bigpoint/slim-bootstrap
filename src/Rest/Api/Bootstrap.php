@@ -177,7 +177,8 @@ class Bootstrap
                 $this->_app->request,
                 $this->_app->response,
                 $this->_app->response->headers,
-                $this->_applicationConfig['shortName']
+                $this->_applicationConfig['shortName'],
+                $this->_app->getLog()
             );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
@@ -187,6 +188,8 @@ class Bootstrap
                 $clientId = $authentication->authenticate(
                     $this->_app->request->get('token')
                 );
+
+                $this->_app->getLog()->info('authentication successfull');
 
                 /*
                  * Inject the clientId into the parameters.
@@ -202,8 +205,13 @@ class Bootstrap
                     $clientId,
                     $this->_app->router()->getCurrentRoute()->getName()
                 );
+
+                $this->_app->getLog()->info('access granted');
             }
         } catch (Exception $e) {
+            $this->_app->getLog()->error(
+                $e->getCode() . ' - ' . $e->getMessage()
+            );
             $this->_app->response->setStatus($e->getCode());
             $this->_app->response->setBody($e->getMessage());
 

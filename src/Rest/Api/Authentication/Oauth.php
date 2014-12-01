@@ -2,6 +2,7 @@
 namespace Rest\Api\Authentication;
 
 use \Rest\Api;
+use \Slim;
 
 /**
  * This class is reponsible for checking if the current user is authenticated
@@ -20,11 +21,18 @@ class Oauth implements Api\Authentication
     private $_apiUrl = '';
 
     /**
-     * @param string $apiUrl URL of the P2 authentication service
+     * @var Slim\Log
      */
-    public function __construct($apiUrl)
+    private $_logger = null;
+
+    /**
+     * @param string   $apiUrl URL of the P2 authentication service
+     * @param Slim\Log $logger Logger instance
+     */
+    public function __construct($apiUrl, Slim\Log $logger)
     {
         $this->_apiUrl = $apiUrl;
+        $this->_logger = $logger;
     }
 
     /**
@@ -59,7 +67,11 @@ class Oauth implements Api\Authentication
     {
         $ch = curl_init();
 
-        curl_setopt($ch, CURLOPT_URL, $this->_apiUrl . $token);
+        $url = $this->_apiUrl . $token;
+
+        $this->_logger->debug('calling GET: ' . $url);
+
+        curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt(
             $ch,
@@ -69,7 +81,27 @@ class Oauth implements Api\Authentication
             )
         );
 
-        $result = curl_exec($ch);
+        $result       = curl_exec($ch);
+        $responseCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlErrno    = curl_errno($ch);
+        $curlError    = curl_error($ch);
+
+        if (0 !== $curlErrno) {
+            $this->_logger->error(
+                'curl error (' . $curlErrno . '): ' . $curlError
+            );
+        }
+
+        if ($responseCode >= 400) {
+            $this->_logger->error('curl call error: ' . $responseCode);
+
+        } elseif ($responseCode >= 300) {
+            $this->_logger->warning('curl call warning: ' . $responseCode);
+        }
+
+        $this->_logger->debug(
+            'result: (' . $responseCode . ') ' . var_export($result, true)
+        );
 
         curl_close($ch);
 

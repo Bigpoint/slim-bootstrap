@@ -11,6 +11,8 @@ It is an abstraction of the [Slim Framework](http://slimframework.com/) and hand
  - [PHP-FPM](http://php-fpm.org/)
  - **Composer**:
     - [slim/slim](https://packagist.org/packages/slim/slim) 2.4.*
+    - [flynsarmy/slim-monolog](https://packagist.org/packages/flynsarmy/slim-monolog) 1.*
+    - [libraries/logger](https://packagist.org/packages/libraries/logger) dev-TP-5909
     - [nocarrier/hal](https://packagist.org/packages/nocarrier/hal) 0.9.*
     - [phpunit/phpunit](https://packagist.org/packages/phpunit/phpunit) 3.7.* (only on dev)
 
@@ -120,13 +122,26 @@ This file is the main entry piont for the application. Here is an example how th
 require __DIR__ . '/../vendor/autoload.php';
 
 $applicationConfig = json_decode(
-    file_get_contents(__DIR__ . '/../config/application.json')
+    file_get_contents(__DIR__ . '/../config/application.json'),
+    true
 );
 $aclConfig         = json_decode(
-    file_get_contents(__DIR__ . '/../config/acl.json')
+    file_get_contents(__DIR__ . '/../config/acl.json'),
+    true
 );
 
-$authFactory    = new \Rest\Api\Authentication\Factory($applicationConfig);
+// create logger
+$loggerFactory        = new \Logger\Factory($applicationConfig['monolog']);
+$authenticationLogger = $loggerFactory->createLogger('authentication');
+$phpLogger            = $loggerFactory->createLogger('php');
+
+// register php error logger
+\Monolog\ErrorHandler::register($phpLogger);
+
+$authFactory    = new \Rest\Api\Authentication\Factory(
+    $applicationConfig,
+    $authenticationLogger
+);
 $authentication = $authFactory->createOauth();
 
 $bootstrap      = new \Rest\Api\Bootstrap(
