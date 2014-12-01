@@ -73,10 +73,14 @@ class Bootstrap
         $handlers = $loggerFactory->createHandlers(
             $this->_applicationConfig['monolog']['logger']['slim']
         );
+        $processors = $loggerFactory->createProcessors(
+            $this->_applicationConfig['monolog']['logger']['slim']
+        );
 
         $logger = new SlimMonolog\Log\MonologWriter(
             array(
-                'handlers' => $handlers,
+                'handlers'   => $handlers,
+                'processors' => $processors,
             )
         );
 
@@ -95,6 +99,14 @@ class Bootstrap
         $app = $this->_app;
 
         $this->_app->hook(
+            'slim.before.router',
+            function () use ($app) {
+                $app->getLog()->debug(
+                    'Request path: ' . $app->request->getPathInfo()
+                );
+            }
+        );
+        $this->_app->hook(
             'slim.before.dispatch',
             array($this, 'authenticationHook')
         );
@@ -103,9 +115,6 @@ class Bootstrap
             function () use ($app) {
                 $app->etag(md5($app->response->getBody()));
 
-                $app->getLog()->debug(
-                    'Request path: ' . $app->request->getPathInfo()
-                );
                 $app->getLog()->debug(
                     'Response status: ' . $app->response->getStatus()
                 );
