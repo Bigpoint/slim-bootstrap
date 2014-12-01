@@ -82,8 +82,10 @@ class Bootstrap
 
         $this->_app = new Slim\Slim(
             array(
-                'debug'      => $this->_applicationConfig['debug'],
-                'log.writer' => $logger,
+                'debug'       => $this->_applicationConfig['debug'],
+                'log.writer'  => $logger,
+                'log.enabled' => true,
+                'log.level'   => Slim\Log::DEBUG,
             )
         );
 
@@ -100,6 +102,13 @@ class Bootstrap
             'slim.after.router',
             function () use ($app) {
                 $app->etag(md5($app->response->getBody()));
+
+                $app->getLog()->debug(
+                    'Request path: ' . $app->request->getPathInfo()
+                );
+                $app->getLog()->debug(
+                    'Response status: ' . $app->response->getStatus()
+                );
             }
         );
     }
@@ -148,6 +157,8 @@ class Bootstrap
         if (null !== $this->_aclConfig
             && null !== $this->_authentication
         ) {
+            $this->_app->getLog()->info('using ACL');
+
             $acl            = new Api\Acl($this->_aclConfig);
             $authentication = $this->_authentication;
         }
