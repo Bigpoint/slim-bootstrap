@@ -17,13 +17,17 @@ class AclTest extends \PHPUnit_Framework_TestCase
     {
         parent::setUp();
 
-        $config = new \stdClass();
-        $config->{'roles'} = new \stdClass();
-        $config->{'roles'}->{'role_bppit'} = new \stdClass();
-        $config->{'roles'}->{'role_bppit'}->{'userdata-export'} = true;
-        $config->{'roles'}->{'role_bppit'}->{'global-footer'} = false;
-        $config->{'access'} = new \stdClass();
-        $config->{'access'}->{'bppit'} = 'role_bppit';
+        $config = array(
+            'roles' => array(
+                'role_bppit' => array(
+                    'userdata-export' => true,
+                    'global-footer'   => false,
+                ),
+            ),
+            'access' => array(
+                'bppit' => 'role_bppit',
+            ),
+        );
 
         $this->_candidate = new Acl($config);
     }

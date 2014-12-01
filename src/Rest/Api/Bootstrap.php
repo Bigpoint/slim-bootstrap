@@ -1,6 +1,7 @@
 <?php
 namespace Rest\Api;
 
+use \Flynsarmy\SlimMonolog;
 use \Rest\Api;
 use \Slim;
 
@@ -12,7 +13,7 @@ use \Slim;
 class Bootstrap
 {
     /**
-     * @var \stdClass
+     * @var array
      */
     private $_applicationConfig = null;
 
@@ -22,7 +23,7 @@ class Bootstrap
     private $_authentication = null;
 
     /**
-     * @var \stdClass
+     * @var array
      */
     private $_aclConfig = null;
 
@@ -47,14 +48,14 @@ class Bootstrap
     private $_params = array();
 
     /**
-     * @param \stdClass $applicationConfig
+     * @param array              $applicationConfig
      * @param Api\Authentication $authentication
-     * @param \stdClass $aclConfig
+     * @param array              $aclConfig
      */
     public function __construct(
-        \stdClass $applicationConfig,
+        array $applicationConfig,
         Api\Authentication $authentication = null,
-        \stdClass $aclConfig = null
+        array $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_authentication    = $authentication;
@@ -73,7 +74,7 @@ class Bootstrap
             $this->_applicationConfig['monolog']['logger']['slim']
         );
 
-        $logger = new \Flynsarmy\SlimMonolog\Log\MonologWriter(
+        $logger = new SlimMonolog\Log\MonologWriter(
             array(
                 'handlers' => $handlers,
             )
@@ -81,7 +82,7 @@ class Bootstrap
 
         $this->_app = new Slim\Slim(
             array(
-                'debug'      => $this->_applicationConfig->debug,
+                'debug'      => $this->_applicationConfig['debug'],
                 'log.writer' => $logger,
             )
         );
@@ -137,7 +138,7 @@ class Bootstrap
         $this->_app->expires(
             date(
                 'D, d M Y H:i:s O',
-                time() + $this->_applicationConfig->cacheDuration
+                time() + $this->_applicationConfig['cacheDuration']
             )
         );
 
@@ -156,7 +157,7 @@ class Bootstrap
                 $this->_app->request,
                 $this->_app->response,
                 $this->_app->response->headers,
-                $this->_applicationConfig->shortName
+                $this->_applicationConfig['shortName']
             );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')

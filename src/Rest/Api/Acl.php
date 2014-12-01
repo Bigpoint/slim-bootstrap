@@ -2,6 +2,7 @@
 namespace Rest\Api;
 
 use \Rest\Api;
+
 /**
  * This class is responsible for managing the access of the different clientIds
  * to the various endpoints the API provides.
@@ -13,14 +14,14 @@ class Acl
     /**
      * Holds the ACL configuration.
      *
-     * @var \stdClass
+     * @var array
      */
     private $_config = null;
 
     /**
-     * @param \stdClass $config The ACL configuration
+     * @param array $config The ACL configuration
      */
-    public function __construct(\stdClass $config)
+    public function __construct(array $config)
     {
         $this->_config = $config;
     }
@@ -39,14 +40,14 @@ class Acl
      */
     public function access($clientId, $endpointName)
     {
-        if (false === isset($this->_config->access->{$clientId})) {
+        if (false === isset($this->_config['access'][$clientId])) {
             throw new Api\Exception('Access denied', 403);
         }
 
-        $role = $this->_config->access->{$clientId};
+        $role = $this->_config['access'][$clientId];
 
-        if (false === isset($this->_config->roles->{$role}->{$endpointName})
-            || true !== $this->_config->roles->{$role}->{$endpointName}
+        if (false === isset($this->_config['roles'][$role][$endpointName])
+            || true !== $this->_config['roles'][$role][$endpointName]
         ) {
             throw new Api\Exception('Access denied', 403);
         }

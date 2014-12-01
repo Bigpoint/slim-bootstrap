@@ -35,21 +35,21 @@ class JsonHalTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
 
         $this->_mockRequest = $this->getMock(
-            'Slim\\Http\\Request',
+            '\Slim\Http\Request',
             array(),
             array(),
             '',
             false
         );
         $this->_mockResponse = $this->getMock(
-            'Slim\\Http\\Response',
+            '\Slim\Http\Response',
             array(
                 'setStatus',
                 'setBody',
             )
         );
         $this->_mockHeaders = $this->getMock(
-            'Slim\\Http\\Headers',
+            '\Slim\Http\Headers',
             array(
                 'set',
             )

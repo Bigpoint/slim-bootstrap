@@ -33,14 +33,14 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
 
         $this->_mockRequest = $this->getMock(
-            'Slim\\Http\\Request',
+            '\Slim\Http\Request',
             array(),
             array(),
             '',
             false
         );
-        $this->_mockResponse = $this->getMock('Slim\\Http\\Response');
-        $this->_mockHeaders  = $this->getMock('Slim\\Http\\Headers');
+        $this->_mockResponse = $this->getMock('\Slim\Http\Response');
+        $this->_mockHeaders  = $this->getMock('\Slim\Http\Headers');
 
         $this->_candidate = new Factory(
             $this->_mockRequest,
@@ -68,31 +68,31 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 'acceptHeader' => null,
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
+                'instance' => '\Rest\Api\ResponseOutputWriter\JsonHal',
             ),
             array(
                 'acceptHeader' => 'application/hal+json',
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
+                'instance'     => '\Rest\Api\ResponseOutputWriter\JsonHal',
             ),
             array(
                 'acceptHeader' => 'application/*',
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
+                'instance'     => '\Rest\Api\ResponseOutputWriter\JsonHal',
             ),
             array(
                 'acceptHeader' => '*/*',
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\JsonHal',
+                'instance'     => '\Rest\Api\ResponseOutputWriter\JsonHal',
             ),
             array(
                 'acceptHeader' => 'application/json',
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
+                'instance'     => '\Rest\Api\ResponseOutputWriter\Json',
             ),
             array(
                 'acceptHeader' => 'application/json,application/hal+json',
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
+                'instance'     => '\Rest\Api\ResponseOutputWriter\Json',
             ),
             array(
                 'acceptHeader' => 'application/json;application/*',
-                'instance'     => 'Rest\\Api\\ResponseOutputWriter\\Json',
+                'instance'     => '\Rest\Api\ResponseOutputWriter\Json',
             ),
         );
     }

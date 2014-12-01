@@ -18,7 +18,7 @@ class OauthTest extends \PHPUnit_Framework_TestCase
         parent::setUp();
 
         $this->_candidate = $this->getMock(
-            'Rest\\Api\\Authentication\\Oauth',
+            '\Rest\Api\Authentication\Oauth',
             array('_call'),
             array('mockApiUrl')
         );

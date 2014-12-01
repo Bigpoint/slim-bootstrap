@@ -11,11 +11,11 @@ use \Rest\Api;
 class Factory
 {
     /**
-     * @var \stdClass
+     * @var array
      */
     private $_config = null;
 
-    public function __construct(\stdClass $config)
+    public function __construct(array $config)
     {
         $this->_config = $config;
     }
@@ -25,6 +25,6 @@ class Factory
      */
     public function createOauth()
     {
-        return new Api\Authentication\Oauth($this->_config->apiUrl);
+        return new Api\Authentication\Oauth($this->_config['apiUrl']);
     }
 }
