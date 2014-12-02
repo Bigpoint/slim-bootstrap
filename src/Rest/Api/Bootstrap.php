@@ -1,6 +1,7 @@
 <?php
 namespace Rest\Api;
 
+use \Flynsarmy\SlimMonolog;
 use \Rest\Api;
 use \Slim;
 
@@ -12,7 +13,7 @@ use \Slim;
 class Bootstrap
 {
     /**
-     * @var \stdClass
+     * @var array
      */
     private $_applicationConfig = null;
 
@@ -22,7 +23,7 @@ class Bootstrap
     private $_authentication = null;
 
     /**
-     * @var \stdClass
+     * @var array
      */
     private $_aclConfig = null;
 
@@ -47,14 +48,14 @@ class Bootstrap
     private $_params = array();
 
     /**
-     * @param \stdClass $applicationConfig
+     * @param array              $applicationConfig
      * @param Api\Authentication $authentication
-     * @param \stdClass $aclConfig
+     * @param array              $aclConfig
      */
     public function __construct(
-        \stdClass $applicationConfig,
+        array $applicationConfig,
         Api\Authentication $authentication = null,
-        \stdClass $aclConfig = null
+        array $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_authentication    = $authentication;
@@ -66,9 +67,29 @@ class Bootstrap
      */
     public function init()
     {
+        $loggerFactory = new \Logger\Factory(
+            $this->_applicationConfig['monolog']
+        );
+        $handlers = $loggerFactory->createHandlers(
+            $this->_applicationConfig['monolog']['logger']['slim']
+        );
+        $processors = $loggerFactory->createProcessors(
+            $this->_applicationConfig['monolog']['logger']['slim']
+        );
+
+        $logger = new SlimMonolog\Log\MonologWriter(
+            array(
+                'handlers'   => $handlers,
+                'processors' => $processors,
+            )
+        );
+
         $this->_app = new Slim\Slim(
             array(
-                'debug' => $this->_applicationConfig->debug,
+                'debug'       => $this->_applicationConfig['debug'],
+                'log.writer'  => $logger,
+                'log.enabled' => true,
+                'log.level'   => Slim\Log::DEBUG,
             )
         );
 
@@ -78,6 +99,14 @@ class Bootstrap
         $app = $this->_app;
 
         $this->_app->hook(
+            'slim.before.router',
+            function () use ($app) {
+                $app->getLog()->debug(
+                    'Request path: ' . $app->request->getPathInfo()
+                );
+            }
+        );
+        $this->_app->hook(
             'slim.before.dispatch',
             array($this, 'authenticationHook')
         );
@@ -85,6 +114,10 @@ class Bootstrap
             'slim.after.router',
             function () use ($app) {
                 $app->etag(md5($app->response->getBody()));
+
+                $app->getLog()->debug(
+                    'Response status: ' . $app->response->getStatus()
+                );
             }
         );
     }
@@ -123,7 +156,7 @@ class Bootstrap
         $this->_app->expires(
             date(
                 'D, d M Y H:i:s O',
-                time() + $this->_applicationConfig->cacheDuration
+                time() + $this->_applicationConfig['cacheDuration']
             )
         );
 
@@ -133,6 +166,8 @@ class Bootstrap
         if (null !== $this->_aclConfig
             && null !== $this->_authentication
         ) {
+            $this->_app->getLog()->info('using ACL');
+
             $acl            = new Api\Acl($this->_aclConfig);
             $authentication = $this->_authentication;
         }
@@ -142,7 +177,8 @@ class Bootstrap
                 $this->_app->request,
                 $this->_app->response,
                 $this->_app->response->headers,
-                $this->_applicationConfig->shortName
+                $this->_applicationConfig['shortName'],
+                $this->_app->getLog()
             );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
@@ -152,6 +188,8 @@ class Bootstrap
                 $clientId = $authentication->authenticate(
                     $this->_app->request->get('token')
                 );
+
+                $this->_app->getLog()->info('authentication successfull');
 
                 /*
                  * Inject the clientId into the parameters.
@@ -167,8 +205,13 @@ class Bootstrap
                     $clientId,
                     $this->_app->router()->getCurrentRoute()->getName()
                 );
+
+                $this->_app->getLog()->info('access granted');
             }
         } catch (Exception $e) {
+            $this->_app->getLog()->error(
+                $e->getCode() . ' - ' . $e->getMessage()
+            );
             $this->_app->response->setStatus($e->getCode());
             $this->_app->response->setBody($e->getMessage());
 

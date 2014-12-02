@@ -11,22 +11,35 @@ class OauthTest extends \PHPUnit_Framework_TestCase
     /**
      * @var \PHPUnit_Framework_MockObject_MockObject
      */
-    private $_candidate = null;
+    private $_mockLogger = null;
+
+    /**
+     * @var \PHPUnit_Framework_MockObject_MockObject
+     */
+    private $_mockOauth = null;
 
     public function setUp()
     {
         parent::setUp();
 
-        $this->_candidate = $this->getMock(
-            'Rest\\Api\\Authentication\\Oauth',
+        $this->_mockLogger = $this->getMock(
+            '\Monolog\Logger',
+            array(),
+            array(),
+            '',
+            false
+        );
+
+        $this->_mockOauth = $this->getMock(
+            '\Rest\Api\Authentication\Oauth',
             array('_call'),
-            array('mockApiUrl')
+            array('mockApiUrl', $this->_mockLogger)
         );
     }
 
     public function testAuthenticateValid()
     {
-        $this->_candidate->expects($this->exactly(1))
+        $this->_mockOauth->expects($this->exactly(1))
             ->method('_call')
             ->with('mockToken')
             ->will(
@@ -35,7 +48,7 @@ class OauthTest extends \PHPUnit_Framework_TestCase
                 )
             );
 
-        $actual = $this->_candidate->authenticate('mockToken');
+        $actual = $this->_mockOauth->authenticate('mockToken');
 
         $this->assertEquals('mockClientId', $actual);
     }
@@ -49,12 +62,12 @@ class OauthTest extends \PHPUnit_Framework_TestCase
      */
     public function testAuthenticationInvalid($returnValue)
     {
-        $this->_candidate->expects($this->exactly(1))
+        $this->_mockOauth->expects($this->exactly(1))
             ->method('_call')
             ->with('mockToken')
             ->will($this->returnValue($returnValue));
 
-        $this->_candidate->authenticate('mockToken');
+        $this->_mockOauth->authenticate('mockToken');
     }
 
     public function authenticationInvalidProvider()
