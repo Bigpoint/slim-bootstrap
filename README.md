@@ -12,7 +12,7 @@ It is an abstraction of the [Slim Framework](http://slimframework.com/) and hand
  - **Composer**:
     - [slim/slim](https://packagist.org/packages/slim/slim) 2.4.*
     - [flynsarmy/slim-monolog](https://packagist.org/packages/flynsarmy/slim-monolog) 1.*
-    - [libraries/logger](https://packagist.org/packages/libraries/logger) dev-TP-5909
+    - [libraries/logger](https://packagist.org/packages/libraries/logger) 0.*
     - [nocarrier/hal](https://packagist.org/packages/nocarrier/hal) 0.9.*
     - [phpunit/phpunit](https://packagist.org/packages/phpunit/phpunit) 3.7.* (only on dev)
 
@@ -99,7 +99,31 @@ The following structure has to be present:
     {
         "shortName": "pinfo",
         "cacheDuration": 900,
-        "debug": true
+        "debug": true,
+        "monolog": {
+            "handler" : {
+                "udp" : {
+                    "host"      : "192.168.50.48",
+                    "port"      : 9999,
+                    "formatter" : "logstash"
+                }
+            },
+            "formatter" : {
+                "logstash" : {
+                    "type" : "restapi-pinfo"
+                }
+            },
+            "logger": {
+                "_default": {
+                    "handler": ["udp"],
+                    "level": "DEBUG"
+                },
+                "slim": {
+                    "handler": ["udp"],
+                    "level": "DEBUG"
+                }
+            }
+        }
     }
 
 The `shortName` is used to prefix the endpoint names in the welcome endpoint when hal+json is used as output format.

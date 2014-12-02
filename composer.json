@@ -17,7 +17,7 @@
         "php": ">=5.4.4",
         "slim/slim": "2.4.*",
         "flynsarmy/slim-monolog": "1.*",
-        "libraries/logger": "dev-TP-5909",
+        "libraries/logger": "0.*",
         "nocarrier/hal": "0.9.*"
     },
     "require-dev": {
