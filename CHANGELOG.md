@@ -40,6 +40,7 @@
  - When loading the config files you now need to make sure that they are loaded as array
  - You now need to create the logger through the `\Logger\Factory` and pass an authentication logger to the authentication factory
  - optionally you can register a logger as PHP error handler. This should happen before the initialization of the Bootstrap class
+
 ```diff
  $applicationConfig = json_decode(
 -    file_get_contents(__DIR__ . '/../config/application.json')
