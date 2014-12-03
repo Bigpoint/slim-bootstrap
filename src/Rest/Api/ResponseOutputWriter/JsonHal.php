@@ -72,12 +72,14 @@ class JsonHal implements Api\ResponseOutputWriter
 
         if (true === is_array($data)) {
             $pathData     = explode('/', $path);
-            $endpointName = $pathData[1];
+            unset($pathData[0]);
+            $endpointName = end($pathData);
+            $endpointUri  = '/' . implode('/', $pathData) . '/';
 
             foreach ($data as $entry) {
                 /** @var Api\DataObject $entry */
                 $identifiers  = $entry->getIdentifiers();
-                $resourceName = '/' . $endpointName . '/'
+                $resourceName = $endpointUri
                     . implode('/', array_values($identifiers));
 
                 $resource = new hal\Hal(
