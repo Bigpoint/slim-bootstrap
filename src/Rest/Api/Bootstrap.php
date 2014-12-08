@@ -253,7 +253,7 @@ class Bootstrap
             }
         )->name($name);
 
-        $this->_collectionGetEndpoints[] = $name;
+        $this->_collectionGetEndpoints[$name] = $route;
     }
 
     /**
@@ -337,7 +337,7 @@ class Bootstrap
             }
         )->name($name);
 
-        $this->_collectionGetEndpoints[] = $name;
+        $this->_collectionGetEndpoints[$name] = $route;
     }
 
     /**
@@ -423,7 +423,7 @@ class Bootstrap
             }
         )->name($name);
 
-        $this->_collectionGetEndpoints[] = $name;
+        $this->_collectionGetEndpoints[$name] = $route;
     }
 
     /**

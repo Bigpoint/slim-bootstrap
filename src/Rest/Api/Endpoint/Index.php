@@ -35,8 +35,8 @@ class Index
     {
         $links = array();
 
-        foreach ($this->_endpoints as $endpoint) {
-            $links[$endpoint] = '/' . $endpoint;
+        foreach ($this->_endpoints as $endpoint => $route) {
+            $links[$endpoint] = $route;
         }
 
         return new Api\DataObject(
