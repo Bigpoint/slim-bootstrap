@@ -1,0 +1,29 @@
+{
+    "shortName": "###NAMESPACE_LOWER###",
+    "cacheDuration": 900,
+    "debug": false,
+    "monolog": {
+        "handler" : {
+            "udp" : {
+                "host"      : "192.168.50.48",
+                "port"      : 9999,
+                "formatter" : "logstash"
+            }
+        },
+        "formatter" : {
+            "logstash" : {
+                "type" : "restapi-###NAMESPACE_LOWER###"
+            }
+        },
+        "logger": {
+            "_default": {
+                "handler": ["udp"],
+                "level": "DEBUG"
+            },
+            "slim": {
+                "handler": ["udp"],
+                "level": "DEBUG"
+            }
+        }
+    }
+}
