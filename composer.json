@@ -25,10 +25,8 @@
     },
     "autoload": {
         "psr-0": {
-            "Rest\\Api\\": [
-                "src/",
-                "tests/"
-            ]
+            "Rest\\Api\\": ["src/", "tests/"]
         }
-    }
+    },
+    "bin": ["generator/restapi-generator"]
 }

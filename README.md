@@ -31,7 +31,14 @@ To run the unit tests of the project you need [phpunit](https://packagist.org/pa
 
     phpunit -c tests/phpunit.xml
 
-## How to implement
+## Setup Skeleton API
+Create a folder for your new api and run the follwing command there.
+
+Set <YOUR_NAMESPACE> in the following one liner to your API namespace name and execute this line. It will load the framework and create a sceleton structure:
+
+    NAMESPACE="<YOUR_NAMESPACE>" && composer init -n --name "restapi/$(echo ${NAMESPACE} | tr '[:upper:]' '[:lower:]')" && composer config repositories.bigpoint composer https://packagist.bigpoint.net/ && composer require "libraries/restapi:*" && ./vendor/bin/restapi-generator "${NAMESPACE}" && composer dumpautoload
+
+## How to implement manually
 In order to create a REST API based on this framework you need a structure similar to the following in your project:
 
     ├── composer.json
