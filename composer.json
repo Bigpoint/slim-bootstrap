@@ -14,7 +14,7 @@
         }
     },
     "require": {
-        "php": ">=5.4.4",
+        "php": ">=5.3.0",
         "slim/slim": "2.4.*",
         "flynsarmy/slim-monolog": "1.*",
         "libraries/logger": "0.*",
