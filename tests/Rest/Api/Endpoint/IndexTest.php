@@ -40,8 +40,8 @@ class IndexTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 'data'   => array(
-                    'mockUri1',
-                    'mockUri2',
+                    'mockUri1' => '/mockUri1',
+                    'mockUri2' => '/mockUri2',
                 ),
                 'result' => new DataObject(
                     array(),
