@@ -176,7 +176,7 @@ class Bootstrap
             // use authentication for api
             if (null !== $this->_authentication) {
 
-                if (true === empty($this->_aclConfig)) {
+                if (false === is_array($this->_aclConfig)) {
                     throw new Api\Exception('acl config is empty or invalid', 500);
                 }
 
