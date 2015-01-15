@@ -55,11 +55,17 @@ class JsonHalTest extends \PHPUnit_Framework_TestCase
             )
         );
 
-        $this->_candidate = new JsonHal(
-            $this->_mockRequest,
-            $this->_mockResponse,
-            $this->_mockHeaders,
-            'mockShortName'
+        $this->_candidate = $this->getMock(
+            '\Rest\Api\ResponseOutputWriter\JsonHal',
+            array(
+                '_jsonEncode'
+            ),
+            array(
+                $this->_mockRequest,
+                $this->_mockResponse,
+                $this->_mockHeaders,
+                'mockShortName'
+            )
         );
     }
 
@@ -71,13 +77,55 @@ class JsonHalTest extends \PHPUnit_Framework_TestCase
      */
     public function testWrite($path, $data)
     {
+        $this->_candidate
+            ->expects($this->exactly(1))
+            ->method('_jsonEncode')
+            ->will($this->returnCallback(
+                function($hal) { return $hal->asJson(); }
+            ));
+
         $this->_mockRequest
             ->expects($this->exactly(1))
             ->method('getPath')
             ->will($this->returnValue($path));
-        $this->_mockHeaders->expects($this->exactly(1))->method('set');
-        $this->_mockResponse->expects($this->exactly(1))->method('setStatus');
-        $this->_mockResponse->expects($this->exactly(1))->method('setBody');
+        $this->_mockHeaders
+            ->expects($this->exactly(1))
+            ->method('set');
+        $this->_mockResponse
+            ->expects($this->exactly(1))
+            ->method('setStatus')
+            ->with($this->equalTo(200));
+        $this->_mockResponse
+            ->expects($this->exactly(1))
+            ->method('setBody');
+
+        $this->_candidate->write($data, 200);
+    }
+
+    /**
+     * @param string           $path
+     * @param array|DataObject $data
+     *
+     * @dataProvider writeProvider
+     */
+    public function testWriteUnencodable($path, $data)
+    {
+        $this->_candidate
+            ->expects($this->exactly(1))
+            ->method('_jsonEncode')
+            ->will($this->returnValue(false));
+
+        $this->_mockRequest
+            ->expects($this->exactly(1))
+            ->method('getPath')
+            ->will($this->returnValue($path));
+        $this->_mockResponse
+            ->expects($this->exactly(1))
+            ->method('setStatus')
+            ->with($this->equalTo(500));
+        $this->_mockResponse
+            ->expects($this->exactly(1))
+            ->method('setBody');
 
         $this->_candidate->write($data, 200);
     }

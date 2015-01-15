@@ -75,11 +75,12 @@ class Json implements Api\ResponseOutputWriter
             $this->_buildStructure($data, $identifiers, 0, $result);
         }
 
-        $body = json_encode($result);
+        $body = $this->_jsonEncode($result);
 
         if (false === $body) {
             $this->_response->setStatus(500);
             $this->_response->setBody("Error encoding requested data.");
+            return;
         }
 
         $this->_headers->set(
@@ -122,5 +123,10 @@ class Json implements Api\ResponseOutputWriter
         } else {
             $result[$identifiers[$index]] = $data->getData();
         }
+    }
+
+    protected function _jsonEncode($data)
+    {
+        return json_encode($data);
     }
 }
