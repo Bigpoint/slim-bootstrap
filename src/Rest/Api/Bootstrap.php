@@ -201,6 +201,14 @@ class Bootstrap
                 $params['clientId'] = $clientId;
                 $this->_app->router()->getCurrentRoute()->setParams($params);
 
+                $this->_app->log->notice('set clientId to parameter: ' . $clientId);
+                $this->_app->log->debug(
+                    var_export(
+                        $this->_app->router()->getCurrentRoute()->getParams(),
+                        true
+                    )
+                );
+
                 $acl->access(
                     $clientId,
                     $this->_app->router()->getCurrentRoute()->getName()
