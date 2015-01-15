@@ -149,30 +149,19 @@ class Bootstrap
      */
     public function authenticationHook()
     {
-        $this->_app->response->headers->set(
-            'Access-Control-Allow-Origin',
-            '*'
-        );
-        $this->_app->expires(
-            date(
-                'D, d M Y H:i:s O',
-                time() + $this->_applicationConfig['cacheDuration']
-            )
-        );
-
-        $acl            = null;
-        $authentication = null;
-
-        if (null !== $this->_aclConfig
-            && null !== $this->_authentication
-        ) {
-            $this->_app->getLog()->info('using ACL');
-
-            $acl            = new Api\Acl($this->_aclConfig);
-            $authentication = $this->_authentication;
-        }
-
         try {
+            $this->_app->response->headers->set(
+                'Access-Control-Allow-Origin',
+                '*'
+            );
+            $this->_app->expires(
+                date(
+                    'D, d M Y H:i:s O',
+                    time() + $this->_applicationConfig['cacheDuration']
+                )
+            );
+
+            // create output writer
             $responseOutputWriterFactory = new Api\ResponseOutputWriter\Factory(
                 $this->_app->request,
                 $this->_app->response,
@@ -184,8 +173,18 @@ class Bootstrap
                 $this->_app->request->headers->get('Accept')
             );
 
-            if (null !== $authentication && null !== $acl) {
-                $clientId = $authentication->authenticate(
+            // use authentication for api
+            if (null !== $this->_authentication) {
+
+                if (true === empty($this->_aclConfig)) {
+                    throw new Api\Exception('acl config is empty or invalid');
+                }
+
+                $this->_app->getLog()->info('using authentication');
+
+                $acl = new Api\Acl($this->_aclConfig);
+
+                $clientId = $this->_authentication->authenticate(
                     $this->_app->request->get('token')
                 );
 
