@@ -26,7 +26,7 @@ class JsonHalTest extends \PHPUnit_Framework_TestCase
     private $_mockHeaders = null;
 
     /**
-     * @var \Rest\Api\ResponseOutputWriter\JsonHal
+     * @var \PHPUnit_Framework_MockObject_MockObject
      */
     private $_candidate = null;
 
@@ -58,13 +58,13 @@ class JsonHalTest extends \PHPUnit_Framework_TestCase
         $this->_candidate = $this->getMock(
             '\Rest\Api\ResponseOutputWriter\JsonHal',
             array(
-                '_jsonEncode'
+                '_jsonEncode',
             ),
             array(
                 $this->_mockRequest,
                 $this->_mockResponse,
                 $this->_mockHeaders,
-                'mockShortName'
+                'mockShortName',
             )
         );
     }
@@ -80,9 +80,13 @@ class JsonHalTest extends \PHPUnit_Framework_TestCase
         $this->_candidate
             ->expects($this->exactly(1))
             ->method('_jsonEncode')
-            ->will($this->returnCallback(
-                function($hal) { return $hal->asJson(); }
-            ));
+            ->will(
+                $this->returnCallback(
+                    function($hal) {
+                        return $hal->asJson();
+                    }
+                )
+            );
 
         $this->_mockRequest
             ->expects($this->exactly(1))
