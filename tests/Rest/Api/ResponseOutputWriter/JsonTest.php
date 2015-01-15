@@ -26,7 +26,7 @@ class JsonTest extends \PHPUnit_Framework_TestCase
     private $_mockHeaders = null;
 
     /**
-     * @var \Rest\Api\ResponseOutputWriter\Json
+     * @var \PHPUnit_Framework_MockObject_MockObject
      */
     private $_candidate = null;
 
@@ -58,13 +58,13 @@ class JsonTest extends \PHPUnit_Framework_TestCase
         $this->_candidate = $this->getMock(
             '\Rest\Api\ResponseOutputWriter\Json',
             array(
-                '_jsonEncode'
+                '_jsonEncode',
             ),
             array(
                 $this->_mockRequest,
                 $this->_mockResponse,
                 $this->_mockHeaders,
-                'mockShortName'
+                'mockShortName',
             )
         );
     }
@@ -77,9 +77,13 @@ class JsonTest extends \PHPUnit_Framework_TestCase
         $this->_candidate
             ->expects($this->exactly(1))
             ->method('_jsonEncode')
-            ->will($this->returnCallback(
-                function($data) { return json_encode($data); }
-            ));
+            ->will(
+                $this->returnCallback(
+                    function($data) {
+                        return json_encode($data);
+                    }
+                )
+            );
 
         $this->_mockHeaders
             ->expects($this->exactly(1))

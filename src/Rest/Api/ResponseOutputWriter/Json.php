@@ -87,7 +87,7 @@ class Json implements Api\ResponseOutputWriter
             'Content-Type',
             'application/json; charset=UTF-8'
         );
-        
+
         $this->_response->setStatus($statusCode);
         $this->_response->setBody($body);
     }
@@ -125,6 +125,13 @@ class Json implements Api\ResponseOutputWriter
         }
     }
 
+    /**
+     * @param $data
+     *
+     * @return string
+     *
+     * @codeCoverageIgnore
+     */
     protected function _jsonEncode($data)
     {
         return json_encode($data);

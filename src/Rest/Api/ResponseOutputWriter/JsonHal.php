@@ -130,6 +130,13 @@ class JsonHal implements Api\ResponseOutputWriter
         }
     }
 
+    /**
+     * @param hal\Hal $hal
+     *
+     * @return string
+     *
+     * @codeCoverageIgnore
+     */
     protected function _jsonEncode(hal\Hal $hal)
     {
         return $hal->asJson();
