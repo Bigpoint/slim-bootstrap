@@ -80,25 +80,44 @@ class JsonTest extends \PHPUnit_Framework_TestCase
      */
     public function writeProvider()
     {
-        $dataObject = new DataObject(
-            array(
-                'affiliateId' => 415,
-                'gameId'      => 14,
-            ),
-            array()
-        );
-
         return array(
             array(
-                'data' => $dataObject,
+                'data' => new DataObject(
+                    array(
+                        'affiliateId' => 415,
+                        'gameId'      => 14,
+                    ),
+                    array()
+                ),
             ),
             array(
                 'data' => array(),
             ),
             array(
                 'data' => array(
-                    $dataObject,
-                    $dataObject,
+                    new DataObject(
+                        array(
+                            'affiliateId' => 415,
+                            'gameId'      => 14,
+                        ),
+                        array()
+                    ),
+                    new DataObject(
+                        array(
+                            'affiliateId' => 415,
+                            'gameId'      => 14,
+                        ),
+                        array()
+                    ),
+                ),
+            ),
+            array(
+                'data' => new DataObject(
+                    array(),
+                    array(
+                        'welcome' => 'Welcome.',
+                    ),
+                    array()
                 ),
             ),
         );

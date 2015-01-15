@@ -101,7 +101,9 @@ class Json implements Api\ResponseOutputWriter
         $index,
         array &$result
     ) {
-        if (false === array_key_exists($identifiers[$index], $result)) {
+        if (true === array_key_exists($index, $identifiers)
+            && false === array_key_exists($identifiers[$index], $result)
+        ) {
             $result[$identifiers[$index]] = array();
         }
 
@@ -113,7 +115,11 @@ class Json implements Api\ResponseOutputWriter
                 $result[$identifiers[$index]]
             );
         } else {
-            $result[$identifiers[$index]] = $data->getData();
+            if (true === array_key_exists($index, $identifiers)) {
+                $result[$identifiers[$index]] = $data->getData();
+            } else {
+                $result = $data->getData();
+            }
         }
     }
 }
