@@ -177,7 +177,7 @@ class Bootstrap
             if (null !== $this->_authentication) {
 
                 if (true === empty($this->_aclConfig)) {
-                    throw new Api\Exception('acl config is empty or invalid');
+                    throw new Api\Exception('acl config is empty or invalid', 500);
                 }
 
                 $this->_app->getLog()->info('using authentication');
@@ -298,7 +298,9 @@ class Bootstrap
 
                 try {
                     $responseOutputWriter->write($endpoint->get($params));
+
                 } catch (Exception $e) {
+                    $app->getLog()->error($e->getCode() . ' - ' . $e->getMessage());
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
 
@@ -385,6 +387,7 @@ class Bootstrap
                         $endpoint->post($params, $app->request->post())
                     );
                 } catch (Exception $e) {
+                    $app->getLog()->error($e->getCode() . ' - ' . $e->getMessage());
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
 
@@ -471,6 +474,7 @@ class Bootstrap
                         $endpoint->put($params, $app->request->put())
                     );
                 } catch (Exception $e) {
+                    $app->getLog()->error($e->getCode() . ' - ' . $e->getMessage());
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
 
