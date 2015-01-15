@@ -100,6 +100,13 @@ class JsonHal implements Api\ResponseOutputWriter
             $this->_addAdditionalLinks($hal, $data->getLinks());
         }
 
+        $body = $hal->asJson();
+
+        if (false === $body) {
+            $this->_response->setStatus(500);
+            $this->_response->setBody("Error encoding requested data.");
+        }
+
         $this->_headers->set(
             'Content-Type',
             'application/hal+json; charset=UTF-8'
