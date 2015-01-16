@@ -100,6 +100,14 @@ class JsonHal implements Api\ResponseOutputWriter
             $this->_addAdditionalLinks($hal, $data->getLinks());
         }
 
+        $body = $this->_jsonEncode($hal);
+
+        if (false === $body) {
+            $this->_response->setStatus(500);
+            $this->_response->setBody("Error encoding requested data.");
+            return;
+        }
+
         $this->_headers->set(
             'Content-Type',
             'application/hal+json; charset=UTF-8'
@@ -120,5 +128,17 @@ class JsonHal implements Api\ResponseOutputWriter
         foreach ($links as $rel => $uri) {
             $hal->addLink($this->_shortName . ':' . $rel, $uri);
         }
+    }
+
+    /**
+     * @param hal\Hal $hal
+     *
+     * @return string
+     *
+     * @codeCoverageIgnore
+     */
+    protected function _jsonEncode(hal\Hal $hal)
+    {
+        return $hal->asJson();
     }
 }

@@ -75,13 +75,21 @@ class Json implements Api\ResponseOutputWriter
             $this->_buildStructure($data, $identifiers, 0, $result);
         }
 
+        $body = $this->_jsonEncode($result);
+
+        if (false === $body) {
+            $this->_response->setStatus(500);
+            $this->_response->setBody("Error encoding requested data.");
+            return;
+        }
+
         $this->_headers->set(
             'Content-Type',
             'application/json; charset=UTF-8'
         );
 
         $this->_response->setStatus($statusCode);
-        $this->_response->setBody(json_encode($result));
+        $this->_response->setBody($body);
     }
 
     /**
@@ -121,5 +129,17 @@ class Json implements Api\ResponseOutputWriter
                 $result = $data->getData();
             }
         }
+    }
+
+    /**
+     * @param $data
+     *
+     * @return string
+     *
+     * @codeCoverageIgnore
+     */
+    protected function _jsonEncode($data)
+    {
+        return json_encode($data);
     }
 }
