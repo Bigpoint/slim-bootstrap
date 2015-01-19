@@ -2,7 +2,7 @@
   "name": "restapi/###NAMESPACE_LOWER###",
   "description": "REST API for ###NAMESPACE###",
   "require": {
-    "libraries/restapi": "1.*"
+    "libraries/restapi": "2.*"
   },
   "autoload": {
     "psr-0": {
