@@ -4,12 +4,6 @@
   "require": {
     "libraries/restapi": "1.*"
   },
-  "repositories": {
-    "bigpoint": {
-      "type": "composer",
-      "url": "https://packagist.bigpoint.net/"
-    }
-  },
   "autoload": {
     "psr-0": {
       "###NAMESPACE###\\": "include/"

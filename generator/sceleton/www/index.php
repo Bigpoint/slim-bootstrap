@@ -9,7 +9,9 @@ $applicationConfig = json_decode(
 );
 
 // create logger
-$loggerFactory        = new \Logger\Factory($applicationConfig['monolog']);
+$loggerFactory        = new \MonologCreator\Factory(
+    $applicationConfig['monolog']
+);
 $authenticationLogger = $loggerFactory->createLogger('authentication');
 $phpLogger            = $loggerFactory->createLogger('php');
 
