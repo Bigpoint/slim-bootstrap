@@ -1,3 +1,18 @@
+# 2.0.0
+- replace `libraries/logger` with `bigpoint/monolog-creator`
+
+## Upgrade from 4.\* to 5.\*
+
+- www/index.php
+ - replace `\Logger\Factory` with `\MonologCreator\Factory`
+
+```diff
+ // create logger
+-$loggerFactory = new \Logger\Factory($config['monolog']);
++$loggerFactory = new \MonologCreator\Factory($config['monolog']);
+```
+
+
 # 1.0.0
 
 - `applicationConfig` and `aclConfig` now has to be an array

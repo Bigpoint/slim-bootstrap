@@ -67,7 +67,7 @@ class Bootstrap
      */
     public function init()
     {
-        $loggerFactory = new \Logger\Factory(
+        $loggerFactory = new \MonologCreator\Factory(
             $this->_applicationConfig['monolog']
         );
         $handlers = $loggerFactory->createHandlers(
