@@ -1,7 +1,7 @@
 # 2.0.0
 - replace `libraries/logger` with `bigpoint/monolog-creator`
 
-## Upgrade from 4.\* to 5.\*
+## Upgrade from 1.\* to 2.\*
 
 - www/index.php
  - replace `\Logger\Factory` with `\MonologCreator\Factory`
