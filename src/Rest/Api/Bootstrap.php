@@ -149,30 +149,19 @@ class Bootstrap
      */
     public function authenticationHook()
     {
-        $this->_app->response->headers->set(
-            'Access-Control-Allow-Origin',
-            '*'
-        );
-        $this->_app->expires(
-            date(
-                'D, d M Y H:i:s O',
-                time() + $this->_applicationConfig['cacheDuration']
-            )
-        );
-
-        $acl            = null;
-        $authentication = null;
-
-        if (null !== $this->_aclConfig
-            && null !== $this->_authentication
-        ) {
-            $this->_app->getLog()->info('using ACL');
-
-            $acl            = new Api\Acl($this->_aclConfig);
-            $authentication = $this->_authentication;
-        }
-
         try {
+            $this->_app->response->headers->set(
+                'Access-Control-Allow-Origin',
+                '*'
+            );
+            $this->_app->expires(
+                date(
+                    'D, d M Y H:i:s O',
+                    time() + $this->_applicationConfig['cacheDuration']
+                )
+            );
+
+            // create output writer
             $responseOutputWriterFactory = new Api\ResponseOutputWriter\Factory(
                 $this->_app->request,
                 $this->_app->response,
@@ -184,8 +173,18 @@ class Bootstrap
                 $this->_app->request->headers->get('Accept')
             );
 
-            if (null !== $authentication && null !== $acl) {
-                $clientId = $authentication->authenticate(
+            // use authentication for api
+            if (null !== $this->_authentication) {
+
+                if (false === is_array($this->_aclConfig)) {
+                    throw new Api\Exception('acl config is empty or invalid', 500);
+                }
+
+                $this->_app->getLog()->info('using authentication');
+
+                $acl = new Api\Acl($this->_aclConfig);
+
+                $clientId = $this->_authentication->authenticate(
                     $this->_app->request->get('token')
                 );
 
@@ -200,6 +199,14 @@ class Bootstrap
                 $params = $this->_app->router()->getCurrentRoute()->getParams();
                 $params['clientId'] = $clientId;
                 $this->_app->router()->getCurrentRoute()->setParams($params);
+
+                $this->_app->log->notice('set clientId to parameter: ' . $clientId);
+                $this->_app->log->debug(
+                    var_export(
+                        $this->_app->router()->getCurrentRoute()->getParams(),
+                        true
+                    )
+                );
 
                 $acl->access(
                     $clientId,
@@ -291,7 +298,9 @@ class Bootstrap
 
                 try {
                     $responseOutputWriter->write($endpoint->get($params));
+
                 } catch (Exception $e) {
+                    $app->getLog()->error($e->getCode() . ' - ' . $e->getMessage());
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
 
@@ -378,6 +387,7 @@ class Bootstrap
                         $endpoint->post($params, $app->request->post())
                     );
                 } catch (Exception $e) {
+                    $app->getLog()->error($e->getCode() . ' - ' . $e->getMessage());
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
 
@@ -464,6 +474,7 @@ class Bootstrap
                         $endpoint->put($params, $app->request->put())
                     );
                 } catch (Exception $e) {
+                    $app->getLog()->error($e->getCode() . ' - ' . $e->getMessage());
                     $app->response->setStatus($e->getCode());
                     $app->response->setBody($e->getMessage());
 
