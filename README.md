@@ -102,7 +102,7 @@ If you want to use the authentication against an oauth /me endpoint you have to 
 This folder should contain your endpoint implementation. Read below about how to define an endpoint.
 
 ### the www/index.php
-This file is the main entry piont for the application. Here is an example how this file should look like:
+This file is the main entry point for the application. Here is an example how this file should look like:
 
 ~~~php
 <?php
@@ -143,12 +143,12 @@ $bootstrap->addRessourceGetEndpoint(
     array(
         'name' => '\w+',
     ),
-    new \Pinfo\Endpoint\Ressource\Dummy()
+    new \DummyApi\Endpoint\Ressource\Dummy()
 );
 $bootstrap->addCollectionGetEndpoint(
     '/dummy',
     'dummy',
-    new \Pinfo\Endpoint\Collection\Dummy()
+    new \DummyApi\Endpoint\Collection\Dummy()
 );
 $bootstrap->run();
 ~~~
@@ -161,7 +161,7 @@ The framework supports two types of endpoints. Collection endpoints, to return m
 These endpoints should implement one of the _CollectionEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of filter parameters which can be passed as GET parameters and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return an array of [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) where each DataObject holds one result.
 
 **Ressource endpoints**  
-These endpoints should implement one of the _RessourceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the ressource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should retnr a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP return code.
+These endpoints should implement one of the _RessourceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the ressource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP status code.
 
 ### Supported HTTP methods
 At the moment the framework supports the following HTTP methods:
@@ -170,7 +170,7 @@ At the moment the framework supports the following HTTP methods:
  - POST
  - PUT
 
-For each of these methods the framework supplies two interfaces for the Collection and Request endpoint under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint).
+For each of these methods the framework supplies two interfaces for the Collection and Ressource endpoint under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint).
 
 ### Registering endpoints to the framework
 The written endpoints have to be registered to the framework and the underling Slim instance in order to be accessible. This can be done by calling the appropriate add methods on the [\SlimBootstrap\Bootstrap](src/SlimBootstrap/Bootstrap.php) instance after the `init()` call and before the `run()` call.
