@@ -1,6 +1,6 @@
-# REST API
+# Slim Bootstrap
 
-This library is the core for an easy to build REST API.
+These classes provide a simple way to bootstrap a Slim application with authentication.
 
 It is an abstraction of the [Slim Framework](http://slimframework.com/) and handles some stuff like output generation in different formats and authentication / acl handling.
 
