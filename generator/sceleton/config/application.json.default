@@ -12,7 +12,7 @@
         },
         "formatter" : {
             "logstash" : {
-                "type" : "restapi-###NAMESPACE_LOWER###"
+                "type" : "SlimBootstrap-###NAMESPACE_LOWER###"
             }
         },
         "logger": {

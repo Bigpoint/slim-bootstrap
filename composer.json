@@ -1,15 +1,26 @@
 {
-    "name": "libraries/restapi",
-    "description": "REST API",
+    "name": "bigpoint/slim-bootstrap",
+    "type": "library",
+    "description": "These classes provide a simple way to bootstrap a Slim application with authentication.",
+    "homepage" : "https://github.com/Bigpoint/slim-bootstrap",
+    "keywords": ["microframework","rest","router","slim"],
+    "license" : "Apache-2.0",
     "authors": [
         {
             "name": "Andreas Schleifer",
             "email": "aschleifer@bigpoint.net"
+        },
+        {
+            "name": "Peter Ahrens",
+            "email": "pahrens@bigpoint.net"
         }
     ],
+    "support" : {
+        "issues" : "https://github.com/Bigpoint/slim-bootstrap/issues"
+    },
     "require": {
-        "php": ">=5.3.0",
-        "slim/slim": "2.4.*",
+        "php": ">=5.3.3",
+        "slim/slim": "2.5.*",
         "flynsarmy/slim-monolog": "1.*",
         "bigpoint/monolog-creator": "1.*",
         "nocarrier/hal": "0.9.*"
@@ -19,8 +30,8 @@
     },
     "autoload": {
         "psr-0": {
-            "Rest\\Api\\": ["src/", "tests/"]
+            "SlimBootstrap\\": ["src/", "tests/"]
         }
     },
-    "bin": ["generator/restapi-generator"]
+    "bin": ["generator/slim-bootstrap-generator"]
 }

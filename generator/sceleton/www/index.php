@@ -1,8 +1,6 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
-use \Rest\Api;
-
 $applicationConfig = json_decode(
     file_get_contents(__DIR__ . '/../config/application.json'),
     true
@@ -18,7 +16,7 @@ $phpLogger            = $loggerFactory->createLogger('php');
 // register php error logger
 \Monolog\ErrorHandler::register($phpLogger);
 
-$bootstrap = new Api\Bootstrap($applicationConfig);
+$bootstrap = new \SlimBootstrap\Bootstrap($applicationConfig);
 $bootstrap->init();
 
 // --- V1 Endpoints - begin ---

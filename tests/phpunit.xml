@@ -4,7 +4,7 @@
          syntaxCheck="true"
          strict="true"
          verbose="true">
-    <testsuite name="REST API Test Suite">
+    <testsuite name="Slim Bootstrap Test Suite">
         <directory>./</directory>
     </testsuite>
     <filter>

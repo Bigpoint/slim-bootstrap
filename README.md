@@ -4,109 +4,64 @@ This library is the core for an easy to build REST API.
 
 It is an abstraction of the [Slim Framework](http://slimframework.com/) and handles some stuff like output generation in different formats and authentication / acl handling.
 
-## Dependencies
- - [PHP](http://php.net/) >= 5.4.4
- - [Debian](http://debian.org/) 7.6
- - [NginX](http://nginx.org)
- - [PHP-FPM](http://php-fpm.org/)
- - **Composer**:
-    - [slim/slim](https://packagist.org/packages/slim/slim) 2.4.*
-    - [flynsarmy/slim-monolog](https://packagist.org/packages/flynsarmy/slim-monolog) 1.*
-    - [libraries/logger](https://packagist.org/packages/libraries/logger) 0.*
-    - [nocarrier/hal](https://packagist.org/packages/nocarrier/hal) 0.9.*
-    - [phpunit/phpunit](https://packagist.org/packages/phpunit/phpunit) 3.7.* (only on dev)
+## installation
 
-## Deployment
-Can be deployed by use of the [chef/restapi](https://gitlab.bigpoint.net/chef/restapi) chef cookbook.
+~~~
+composer require bigpoint/slim-bootstrap
+~~~
 
-## API Documentation
-To generate the API documentation you need [apigen](http://apigen.org/) on your system. Then run the following command in the project root:
-
-    apigen -c apigen.conf
-
-This will generate the API documentation as HTML documents in the `docs/` folder.
-
-## Unit Tests
-To run the unit tests of the project you need [phpunit](https://packagist.org/packages/phpunit/phpunit) on your system. Then run the following command in the project root:
-
-    phpunit -c tests/phpunit.xml
+## webserver configuration
+In order to configure your webserver to pass all requests in a proper way to the slim application please read the [Route URL Rewriting](http://docs.slimframework.com/#Route-URL-Rewriting) section of the Slim documentation.
 
 ## Setup Skeleton API
 Create a folder for your new api and run the follwing command there.
 
-Set <YOUR_NAMESPACE> in the following one liner to your API namespace name and execute this line. It will load the framework and create a sceleton structure:
+Set <YOUR_NAMESPACE> in the following one liner to your API namespace (camel case) name and execute this line. It will load the framework and create a sceleton structure:
 
-    NAMESPACE="<YOUR_NAMESPACE>" && composer init -n --name "restapi/$(echo ${NAMESPACE} | tr '[:upper:]' '[:lower:]')" && composer config repositories.bigpoint composer https://packagist.bigpoint.net/ && composer require "libraries/restapi:*" && ./vendor/bin/restapi-generator "${NAMESPACE}" && composer dumpautoload
+~~~
+NAMESPACE="<YOUR_NAMESPACE>" && composer init -n && composer require "bigpoint/slim-bootstrap:*" && ./vendor/bin/slim-bootstrap-generator "${NAMESPACE}" && composer dumpautoload
+~~~
 
 ## How to implement manually
-In order to create a REST API based on this framework you need a structure similar to the following in your project:
+In order to create a rest api based on this framework you need a structure similar to the following in your project:
 
     ├── composer.json
     ├── config
     │   ├── acl.json
     │   ├── application.json
     ├── include
-    │   └── Pinfo
+    │   └── DummyApi
     └── www
         └── index.php
 
-### composer.json
-    {
-        "name": "account/pinfo",
-        "description": "Project Information Service (Pinfo)",
-        "authors": [
-            {
-                "name": "Andreas Schleifer",
-                "email": "aschleifer@bigpoint.net"
-            }
-        ],
-        "repositories": {
-            "bigpoint": {
-                "type": "composer",
-                "url": "https://packagist.bigpoint.net/"
-            }
-        },
-        "require": {
-            "php": ">=5.4.4",
-            "libraries/restapi": "0.2.*"
-        },
-        "require-dev": {
-            "phpunit/phpunit": "3.7.*"
-        },
-        "autoload": {
-            "psr-0": {
-                "Pinfo\\": ["include/", "tests/"]
-            }
-        }
-    }
-
-
 ### config/acl.json
 The ACL is optional. If you don't need an authentication and authorization you can just ignore the ACL config. However if you want authentication the ACL config has to look something like this:
-
+~~~json
     {
         "roles": {
-            "role_myRole": {
+            "role_dummy": {
                 "index": true,
-                "endpoint1": true
+                "dummy": true
             }
         },
         "access": {
-            "myClientId": "role_myRole",
+            "myDummyClientId": "role_dummy",
         }
     }
+~~~
 
-This is mapping the clientId "myClientId" to the role "role_myRole" which as access to the "index" and the "endpoint1" endpoints.
+This is mapping the clientId "myDummyClientId" to the role "role_dummy" which as access to the "index" and the "dummy" endpoints.
 
 ### config/application.json
 This file holds the main configuration for the implementation and the framework.
+For documentation on the `"monolog"` block in the config see [MonologCreator](https://github.com/Bigpoint/monolog-creator).
 
 The following structure has to be present:
-
+~~~json
     {
-        "shortName": "pinfo",
+        "shortName": "dummyapi",
         "cacheDuration": 900,
-        "debug": true,
+        "debug": false,
         "monolog": {
             "handler" : {
                 "udp" : {
@@ -117,7 +72,7 @@ The following structure has to be present:
             },
             "formatter" : {
                 "logstash" : {
-                    "type" : "restapi-pinfo"
+                    "type" : "SlimBootstrap-dummyapi"
                 }
             },
             "logger": {
@@ -132,6 +87,7 @@ The following structure has to be present:
             }
         }
     }
+~~~
 
 The `shortName` is used to prefix the endpoint names in the welcome endpoint when hal+json is used as output format.
 
@@ -148,7 +104,7 @@ This folder should contain your endpoint implementation. Read below about how to
 ### the www/index.php
 This file is the main entry piont for the application. Here is an example how this file should look like:
 
-```php
+~~~php
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -162,50 +118,50 @@ $aclConfig         = json_decode(
 );
 
 // create logger
-$loggerFactory        = new \Logger\Factory($applicationConfig['monolog']);
+$loggerFactory        = new \MonologCreator\Factory($applicationConfig['monolog']);
 $authenticationLogger = $loggerFactory->createLogger('authentication');
 $phpLogger            = $loggerFactory->createLogger('php');
 
 // register php error logger
 \Monolog\ErrorHandler::register($phpLogger);
 
-$authFactory    = new \Rest\Api\Authentication\Factory(
+$authFactory    = new \SlimBootstrap\Authentication\Factory(
     $applicationConfig,
     $authenticationLogger
 );
 $authentication = $authFactory->createOauth();
 
-$bootstrap      = new \Rest\Api\Bootstrap(
+$bootstrap      = new \SlimBootstrap\Bootstrap(
     $applicationConfig,
     $authentication,
     $aclConfig
 );
 $bootstrap->init();
 $bootstrap->addRessourceGetEndpoint(
-    '/projects/:projectId',
-    'projects',
+    '/dummy/:name',
+    'dummy',
     array(
-        'projectId' => '\d+',
+        'name' => '\w+',
     ),
-    new \Pinfo\Endpoint\Ressource\Projects()
+    new \Pinfo\Endpoint\Ressource\Dummy()
 );
 $bootstrap->addCollectionGetEndpoint(
-    '/projects',
-    'projects',
-    new \Pinfo\Endpoint\Collection\Projects()
+    '/dummy',
+    'dummy',
+    new \Pinfo\Endpoint\Collection\Dummy()
 );
 $bootstrap->run();
-```
+~~~
 
 ## Create Endpoints
 ### Collection Endpoint
 The framework supports two types of endpoints. Collection endpoints, to return multiple results and ressource endpoints to return / handle a special result.
 
 **Collection endpoints**  
-These endpoints should implement one of the _CollectionEndpoint_ interfaces located under [\Rest\Api\Endpoint](src/Rest/Api/Endpoint). It will then get an array of filter parameters which can be passed as GET parameters and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return an array of [\Rest\Api\DataObject](Rest/Api/DataObject.php) where each DataObject holds one result.
+These endpoints should implement one of the _CollectionEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of filter parameters which can be passed as GET parameters and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return an array of [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) where each DataObject holds one result.
 
 **Ressource endpoints**  
-These endpoints should implement one of the _RessourceEndpoint_ interfaces located under [\Rest\Api\Endpoint](src/Rest/Api/Endpoint). It will then get an array of the parameters in the URL the ressource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should retnr a [\Rest\Api\DataObject](Rest/Api/DataObject.php) and it should throw a [\Rest\Api\Exception](Rest/Api/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP return code.
+These endpoints should implement one of the _RessourceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the ressource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should retnr a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP return code.
 
 ### Supported HTTP methods
 At the moment the framework supports the following HTTP methods:
@@ -214,10 +170,10 @@ At the moment the framework supports the following HTTP methods:
  - POST
  - PUT
 
-For each of these methods the framework supplies two interfaces for the Collection and Request endpoint under [\Rest\Api\Endpoint](src/Rest/Api/Endpoint).
+For each of these methods the framework supplies two interfaces for the Collection and Request endpoint under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint).
 
 ### Registering endpoints to the framework
-The written endpoints have to be registered to the framework and the underling Slim instance in order to be accessible. This can be done by calling the appropriate add methods on the [\Rest\Api\Bootstrap](Rest/Api/Bootstrap.php) instance after the `init()` call and before the `run()` call.
+The written endpoints have to be registered to the framework and the underling Slim instance in order to be accessible. This can be done by calling the appropriate add methods on the [\SlimBootstrap\Bootstrap](src/SlimBootstrap/Bootstrap.php) instance after the `init()` call and before the `run()` call.
 
 The framework is using the basic form of slim to [register a route](http://docs.slimframework.com/#Routing-Overview) and bind an endpoint to the route.
 
@@ -226,10 +182,29 @@ In order to do this the methods need some specific parameters which are explaine
 **addCollectionGetEndpoint**  
 This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint".  
 As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.  
-The third parameter is an instance of [Rest\Api\Endpoint\CollectionGet](Rest/Api/Endpoint/CollectionGet.php).
+The third parameter is an instance of [SlimBootstrap\Endpoint\CollectionGet](src/SlimBootstrap/Endpoint/CollectionGet.php).
 
 **addRessourceGetEndpoint**  
 This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId".  
 As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.  
 The third parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions.  
-Finally the fourth parameter is an instance of [Rest\Api\Endpoint\RessourceGet](Rest/Api/Endpoint/RessourceGet.php).
+Finally the fourth parameter is an instance of [SlimBootstrap\Endpoint\RessourceGet](src/SlimBootstrap/Endpoint/RessourceGet.php).
+
+## License & Authors
+- Authors:: Peter Ahrens (<pahrens@bigpoint.net>), Andreas Schleifer (<aschleifer@bigpoint.net>)
+
+~~~
+Copyright:: 2015 Bigpoint GmbH
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+~~~
