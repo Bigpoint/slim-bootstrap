@@ -16,7 +16,7 @@ In order to configure your webserver to pass all requests in a proper way to the
 ## Setup Skeleton API
 Create a folder for your new api and run the follwing command there.
 
-Set <YOUR_NAMESPACE> in the following one liner to your API namespace (camel case) name and execute this line. It will load the framework and create a sceleton structure:
+Set `<YOUR_NAMESPACE>` in the following one liner to your API namespace (camel case) name and execute this line. It will load the framework and create a sceleton structure:
 
 ~~~
 NAMESPACE="<YOUR_NAMESPACE>" && composer init -n && composer require "bigpoint/slim-bootstrap:*" && ./vendor/bin/slim-bootstrap-generator "${NAMESPACE}" && composer dumpautoload
@@ -50,7 +50,7 @@ The ACL is optional. If you don't need an authentication and authorization you c
     }
 ~~~
 
-This is mapping the clientId "myDummyClientId" to the role "role_dummy" which as access to the "index" and the "dummy" endpoints.
+This is mapping the clientId "myDummyClientId" to the role "role_dummy" which has access to the "index" and the "dummy" endpoints.
 
 ### config/application.json
 This file holds the main configuration for the implementation and the framework.
