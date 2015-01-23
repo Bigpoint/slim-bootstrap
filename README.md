@@ -23,14 +23,20 @@ NAMESPACE="<YOUR_NAMESPACE>" && composer init -n && composer require "bigpoint/s
 ~~~
 
 ## How to implement manually
-In order to create a rest api based on this framework you need a structure similar to the following in your project:
+In order to create a rest api based on this framework you need a structure similar to the following in your project.
 
     ├── composer.json
     ├── config
     │   ├── acl.json
     │   ├── application.json
     ├── include
-    │   └── DummyApi
+    │   └── ###Namespace###
+    │       └── Endpoint
+    │           └── V1
+    │               ├── Collection
+    │               │   └── EndpointA.php
+    │               └── Ressource
+    │                   └── EndpointA.php
     └── www
         └── index.php
 
