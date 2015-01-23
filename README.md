@@ -27,7 +27,7 @@ In order to create a rest api based on this framework you need a structure simil
 
     ├── composer.json
     ├── config
-    │   ├── application.json
+    │   └── application.json
     ├── include
     │   └── ###Namespace###
     │       └── Endpoint
@@ -250,7 +250,7 @@ This is mapping the clientId "myDummyClientId" to the role "role_dummy" which ha
 
 ### Custom Authentication
 
-If you want, you can define your own authentication class which for example reads from a database. If you want to do this you have to implement the (Authentication interface)[src/SlimBootstrap/Authentication.php].
+If you want, you can define your own authentication class which for example reads from a database. If you want to do this you have to implement the [Authentication interface](src/SlimBootstrap/Authentication.php).
 
 
 ## License & Authors
