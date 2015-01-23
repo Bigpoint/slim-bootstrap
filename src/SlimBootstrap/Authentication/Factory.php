@@ -38,7 +38,7 @@ class Factory
     public function createOauth()
     {
         return new SlimBootstrap\Authentication\Oauth(
-            $this->_config['apiUrl'],
+            $this->_config['authenticationUrl'],
             $this->_logger
         );
     }

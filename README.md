@@ -23,34 +23,21 @@ NAMESPACE="<YOUR_NAMESPACE>" && composer init -n && composer require "bigpoint/s
 ~~~
 
 ## How to implement manually
-In order to create a rest api based on this framework you need a structure similar to the following in your project:
+In order to create a rest api based on this framework you need a structure similar to the following in your project.
 
     ├── composer.json
     ├── config
-    │   ├── acl.json
     │   ├── application.json
     ├── include
-    │   └── DummyApi
+    │   └── ###Namespace###
+    │       └── Endpoint
+    │           └── V1
+    │               ├── Collection
+    │               │   └── EndpointA.php
+    │               └── Ressource
+    │                   └── EndpointA.php
     └── www
         └── index.php
-
-### config/acl.json
-The ACL is optional. If you don't need an authentication and authorization you can just ignore the ACL config. However if you want authentication the ACL config has to look something like this:
-~~~json
-    {
-        "roles": {
-            "role_dummy": {
-                "index": true,
-                "dummy": true
-            }
-        },
-        "access": {
-            "myDummyClientId": "role_dummy",
-        }
-    }
-~~~
-
-This is mapping the clientId "myDummyClientId" to the role "role_dummy" which has access to the "index" and the "dummy" endpoints.
 
 ### config/application.json
 This file holds the main configuration for the implementation and the framework.
@@ -59,20 +46,20 @@ For documentation on the `"monolog"` block in the config see [MonologCreator](ht
 The following structure has to be present:
 ~~~json
     {
-        "shortName": "dummyapi",
+        "shortName": "###NAMESPACE_LOWER###",
         "cacheDuration": 900,
         "debug": false,
         "monolog": {
-            "handler" : {
-                "udp" : {
-                    "host"      : "192.168.50.48",
-                    "port"      : 9999,
-                    "formatter" : "logstash"
+            "handler": {
+                "udp": {
+                    "host": "127.0.0.1",
+                    "port": 6666,
+                    "formatter": "logstash"
                 }
             },
-            "formatter" : {
-                "logstash" : {
-                    "type" : "SlimBootstrap-dummyapi"
+            "formatter": {
+                "logstash": {
+                    "type": "SlimBootstrap-###NAMESPACE_LOWER###"
                 }
             },
             "logger": {
@@ -95,9 +82,6 @@ The `cacheDuration` defines the interval (in seconds) used for the cache expire 
 
 If the `debug` flag is set to true the slim framework will print out a stack trace if an error occurs. Otherwise it will just show a 500 Internal Server Error.
 
-**optional parameters:**  
-If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `apiUrl`. At the end of that value the passed access token is concatinated.
-
 ### the include/ folder
 This folder should contain your endpoint implementation. Read below about how to define an endpoint.
 
@@ -112,10 +96,6 @@ $applicationConfig = json_decode(
     file_get_contents(__DIR__ . '/../config/application.json'),
     true
 );
-$aclConfig         = json_decode(
-    file_get_contents(__DIR__ . '/../config/acl.json'),
-    true
-);
 
 // create logger
 $loggerFactory        = new \MonologCreator\Factory($applicationConfig['monolog']);
@@ -125,16 +105,8 @@ $phpLogger            = $loggerFactory->createLogger('php');
 // register php error logger
 \Monolog\ErrorHandler::register($phpLogger);
 
-$authFactory    = new \SlimBootstrap\Authentication\Factory(
-    $applicationConfig,
-    $authenticationLogger
-);
-$authentication = $authFactory->createOauth();
-
 $bootstrap      = new \SlimBootstrap\Bootstrap(
-    $applicationConfig,
-    $authentication,
-    $aclConfig
+    $applicationConfig
 );
 $bootstrap->init();
 $bootstrap->addRessourceGetEndpoint(
@@ -157,10 +129,12 @@ $bootstrap->run();
 ### Collection Endpoint
 The framework supports two types of endpoints. Collection endpoints, to return multiple results and ressource endpoints to return / handle a special result.
 
-**Collection endpoints**  
+**Collection endpoints**
+
 These endpoints should implement one of the _CollectionEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of filter parameters which can be passed as GET parameters and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return an array of [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) where each DataObject holds one result.
 
-**Ressource endpoints**  
+**Ressource endpoints**
+
 These endpoints should implement one of the _RessourceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the ressource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP status code.
 
 ### Supported HTTP methods
@@ -173,22 +147,111 @@ At the moment the framework supports the following HTTP methods:
 For each of these methods the framework supplies two interfaces for the Collection and Ressource endpoint under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint).
 
 ### Registering endpoints to the framework
-The written endpoints have to be registered to the framework and the underling Slim instance in order to be accessible. This can be done by calling the appropriate add methods on the [\SlimBootstrap\Bootstrap](src/SlimBootstrap/Bootstrap.php) instance after the `init()` call and before the `run()` call.
+The written endpoints have to be registered to the framework and the underling Slim instance in order to be accessible. This can be done by calling the appropriate add methods on the [\SlimBootstrap\Bootstrap](src/SlimBootstrap/Bootstrap.php) instance after the `init()` call and before the `run()` call. The framework is using the basic form of slim to [register a route](http://docs.slimframework.com/#Routing-Overview) and bind an endpoint to the route. In order to do this the methods need some specific parameters which are explained here for the GET endpoints but are very similar for the other endpoints:
 
-The framework is using the basic form of slim to [register a route](http://docs.slimframework.com/#Routing-Overview) and bind an endpoint to the route.
+**addCollectionGetEndpoint**
 
-In order to do this the methods need some specific parameters which are explained here for the GET endpoints but are very similar for the other endpoints:
+This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint". As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The third parameter is an instance of [SlimBootstrap\Endpoint\CollectionGet](src/SlimBootstrap/Endpoint/CollectionGet.php).
 
-**addCollectionGetEndpoint**  
-This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint".  
-As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.  
-The third parameter is an instance of [SlimBootstrap\Endpoint\CollectionGet](src/SlimBootstrap/Endpoint/CollectionGet.php).
+**addRessourceGetEndpoint**
 
-**addRessourceGetEndpoint**  
-This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId".  
-As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.  
-The third parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions.  
-Finally the fourth parameter is an instance of [SlimBootstrap\Endpoint\RessourceGet](src/SlimBootstrap/Endpoint/RessourceGet.php).
+This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId". As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The third parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions. Finally the fourth parameter is an instance of [SlimBootstrap\Endpoint\RessourceGet](src/SlimBootstrap/Endpoint/RessourceGet.php).
+
+## Response Output
+
+Slim-Bootstrap supports multiple response output types, which can be requested via header attribute "Accept":
+
+- [application/hal+json](http://stateless.co/hal_specification.html) __(default)__
+- application/json
+
+## Authentication
+
+It's possible to enable an authentication against an oauth server, to secure your api and set endpoint specific permissions. The oauth server has to provide the clientId as `entity_id` in its /me endpoint of assigned token, to work propatly with slim-bootstraps authentication.
+
+### How it works
+
+When authentication is enabled, you have to add the url parameter `token` to api calls with an access token given from your oauth server. The authentication logic validate this token aginst the configurated oauth server via its /me endpoint. Next the collected clientId from /me endpoint is going to be validated against requested endpoint and configurated acl. If all is fine, access is granted to requester. Otherwise request is aborted with an 401 or 403.
+
+### Enable Authentication
+
+If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `authenticationUrl`. At the end of that value the passed access token is concatinated.
+
+~~~
+https://myserver.com/me?access_token=
+~~~
+
+Also you have to add a config/acl.json, which defines accessable endpoints for a clientId.
+~~~json
+    {
+        "roles": {
+            "role_dummy": {
+                "index": true,
+                "dummy": true
+            }
+        },
+        "access": {
+            "myDummyClientId": "role_dummy",
+        }
+    }
+~~~
+
+Last, you have to add following code parts at your ww/index.php file.
+
+~~~diff
+<?php
+require __DIR__ . '/../vendor/autoload.php';
+
+$applicationConfig = json_decode(
+    file_get_contents(__DIR__ . '/../config/application.json'),
+    true
+);
++$aclConfig         = json_decode(
++    file_get_contents(__DIR__ . '/../config/acl.json'),
++    true
++);
+
+// create logger
+$loggerFactory        = new \MonologCreator\Factory($applicationConfig['monolog']);
+$authenticationLogger = $loggerFactory->createLogger('authentication');
+$phpLogger            = $loggerFactory->createLogger('php');
+
+// register php error logger
+\Monolog\ErrorHandler::register($phpLogger);
+
++$authFactory    = new \SlimBootstrap\Authentication\Factory(
++    $applicationConfig,
++    $authenticationLogger
++);
++$authentication = $authFactory->createOauth();
+
+$bootstrap      = new \SlimBootstrap\Bootstrap(
+    $applicationConfig,
++    $authentication,
++    $aclConfig
+);
+$bootstrap->init();
+$bootstrap->addRessourceGetEndpoint(
+    '/dummy/:name',
+    'dummy',
+    array(
+        'name' => '\w+',
+    ),
+    new \DummyApi\Endpoint\Ressource\Dummy()
+);
+$bootstrap->addCollectionGetEndpoint(
+    '/dummy',
+    'dummy',
+    new \DummyApi\Endpoint\Collection\Dummy()
+);
+$bootstrap->run();
+~~~
+
+This is mapping the clientId "myDummyClientId" to the role "role_dummy" which has access to the "index" and the "dummy" endpoints.
+
+### Custom Authentication
+
+If you want, you can define your own authentication class which for example reads from a database. If you want to do this you have to implement the (Authentication interface)[src/SlimBootstrap/Authentication.php].
+
 
 ## License & Authors
 - Authors:: Peter Ahrens (<pahrens@bigpoint.net>), Andreas Schleifer (<aschleifer@bigpoint.net>)
