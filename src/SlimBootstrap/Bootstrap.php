@@ -243,6 +243,8 @@ class Bootstrap
      * @param string $route
      * @param string $name     name of the route to add (used in ACL)
      * @param object $endpoint should be one of \SlimBootstrap\Endpoint\Collection*
+     *
+     * @throws SlimBootstrap\Exception
      */
     public function addCollectionEndpoint(
         $type,
@@ -254,29 +256,42 @@ class Bootstrap
         $params               = $this->_params;
         $responseOutputWriter = &$this->_responseOutputWriter;
 
+        // check if $endpoint is valid
+        $interfaces = class_implements($endpoint);
+        $interface  = 'SlimBootstrap\Endpoint\Collection' . ucfirst($type);
+
+        if (false === array_key_exists($interface, $interfaces)) {
+            throw new SlimBootstrap\Exception(
+                'endpoint "' . get_class($endpoint)
+                . '" is not a valid collection ' . strtoupper($type) . ' endpoint'
+            );
+        }
+
+        // register endpoint to Slim
         $this->_app->$type(
             $route,
             function () use ($type, &$responseOutputWriter, $endpoint, $params, $app) {
-                $interfaces = class_implements($endpoint);
-                $interface  = 'SlimBootstrap\Endpoint\Collection' . ucfirst($type);
-
-                if (false === array_key_exists($interface, $interfaces)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid collection ' . strtoupper($type) . ' endpoint'
-                    );
-                }
-
                 if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
                     $endpoint->setClientId(
                         $app->router()->getCurrentRoute()->getParam('clientId')
                     );
                 }
 
-                $responseOutputWriter->write($endpoint->$type($params));
+                try {
+                    $responseOutputWriter->write($endpoint->$type($params));
+                } catch (SlimBootstrap\Exception $e) {
+                    $app->getLog()->error(
+                        $e->getCode() . ' - ' . $e->getMessage()
+                    );
+                    $app->response->setStatus($e->getCode());
+                    $app->response->setBody($e->getMessage());
+
+                    $app->stop();
+                }
             }
         )->name($name);
 
+        // add endpoint to collection list to show on hal+json index endpoint
         $this->_collectionEndpoints[$name] = $route;
     }
 
@@ -286,6 +301,8 @@ class Bootstrap
      * @param string $name       name of the route to add (used in ACL)
      * @param array  $conditions
      * @param object $endpoint   should be one of \SlimBootstrap\Endpoint\Resource*
+     *
+     * @throws SlimBootstrap\Exception
      */
     public function addResourceEndpoint(
         $type,
@@ -297,20 +314,22 @@ class Bootstrap
         $app                  = $this->_app;
         $responseOutputWriter = &$this->_responseOutputWriter;
 
+        // check if $endpoint is valid
+        $interfaces = class_implements($endpoint);
+        $interface  = 'SlimBootstrap\Endpoint\Resource' . ucfirst($type);
+
+        if (false === array_key_exists($interface, $interfaces)) {
+            throw new SlimBootstrap\Exception(
+                'endpoint "' . get_class($endpoint)
+                . '" is not a valid resource ' . strtoupper($type) . ' endpoint'
+            );
+        }
+
+        // register endpoint to Slim
         $app->$type(
             $route,
             function () use ($type, &$responseOutputWriter, $endpoint, $app) {
                 $params = func_get_args();
-
-                $interfaces = class_implements($endpoint);
-                $interface  = 'SlimBootstrap\Endpoint\Resource' . ucfirst($type);
-
-                if (false === array_key_exists($interface, $interfaces)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid resource ' . strtoupper($type) . ' endpoint'
-                    );
-                }
 
                 if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
                     $endpoint->setClientId(
@@ -320,7 +339,6 @@ class Bootstrap
 
                 try {
                     $responseOutputWriter->write($endpoint->$type($params));
-
                 } catch (SlimBootstrap\Exception $e) {
                     $app->getLog()->error(
                         $e->getCode() . ' - ' . $e->getMessage()
