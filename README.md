@@ -46,20 +46,20 @@ For documentation on the `"monolog"` block in the config see [MonologCreator](ht
 The following structure has to be present:
 ~~~json
     {
-        "shortName": "dummyapi",
+        "shortName": "###NAMESPACE_LOWER###",
         "cacheDuration": 900,
         "debug": false,
         "monolog": {
-            "handler" : {
-                "udp" : {
-                    "host"      : "192.168.50.48",
-                    "port"      : 9999,
-                    "formatter" : "logstash"
+            "handler": {
+                "udp": {
+                    "host": "127.0.0.1",
+                    "port": 6666,
+                    "formatter": "logstash"
                 }
             },
-            "formatter" : {
-                "logstash" : {
-                    "type" : "SlimBootstrap-dummyapi"
+            "formatter": {
+                "logstash": {
+                    "type": "SlimBootstrap-###NAMESPACE_LOWER###"
                 }
             },
             "logger": {
