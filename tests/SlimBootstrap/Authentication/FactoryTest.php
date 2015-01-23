@@ -32,7 +32,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
 
         $this->_authenticationFactory = new Factory(
             array(
-                'apiUrl' => 'mockApiUrl',
+                'authenticationUrl' => 'mockApiUrl',
             ),
             $this->_mockLogger
         );

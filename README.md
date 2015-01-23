@@ -180,7 +180,7 @@ When authentication is enabled, you have to add the url parameter `token` to api
 
 ### Enable Authentication
 
-If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `apiUrl`. At the end of that value the passed access token is concatinated.
+If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `authenticationUrl`. At the end of that value the passed access token is concatinated.
 
 ~~~
 https://myserver.com/me?access_token=
