@@ -34,24 +34,6 @@ In order to create a rest api based on this framework you need a structure simil
     └── www
         └── index.php
 
-### config/acl.json
-The ACL is optional. If you don't need an authentication and authorization you can just ignore the ACL config. However if you want authentication the ACL config has to look something like this:
-~~~json
-    {
-        "roles": {
-            "role_dummy": {
-                "index": true,
-                "dummy": true
-            }
-        },
-        "access": {
-            "myDummyClientId": "role_dummy",
-        }
-    }
-~~~
-
-This is mapping the clientId "myDummyClientId" to the role "role_dummy" which has access to the "index" and the "dummy" endpoints.
-
 ### config/application.json
 This file holds the main configuration for the implementation and the framework.
 For documentation on the `"monolog"` block in the config see [MonologCreator](https://github.com/Bigpoint/monolog-creator).
@@ -95,9 +77,6 @@ The `cacheDuration` defines the interval (in seconds) used for the cache expire 
 
 If the `debug` flag is set to true the slim framework will print out a stack trace if an error occurs. Otherwise it will just show a 500 Internal Server Error.
 
-**optional parameters:**  
-If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `apiUrl`. At the end of that value the passed access token is concatinated.
-
 ### the include/ folder
 This folder should contain your endpoint implementation. Read below about how to define an endpoint.
 
@@ -112,10 +91,6 @@ $applicationConfig = json_decode(
     file_get_contents(__DIR__ . '/../config/application.json'),
     true
 );
-$aclConfig         = json_decode(
-    file_get_contents(__DIR__ . '/../config/acl.json'),
-    true
-);
 
 // create logger
 $loggerFactory        = new \MonologCreator\Factory($applicationConfig['monolog']);
@@ -125,16 +100,8 @@ $phpLogger            = $loggerFactory->createLogger('php');
 // register php error logger
 \Monolog\ErrorHandler::register($phpLogger);
 
-$authFactory    = new \SlimBootstrap\Authentication\Factory(
-    $applicationConfig,
-    $authenticationLogger
-);
-$authentication = $authFactory->createOauth();
-
 $bootstrap      = new \SlimBootstrap\Bootstrap(
-    $applicationConfig,
-    $authentication,
-    $aclConfig
+    $applicationConfig
 );
 $bootstrap->init();
 $bootstrap->addRessourceGetEndpoint(
@@ -157,10 +124,10 @@ $bootstrap->run();
 ### Collection Endpoint
 The framework supports two types of endpoints. Collection endpoints, to return multiple results and ressource endpoints to return / handle a special result.
 
-**Collection endpoints**  
+**Collection endpoints**
 These endpoints should implement one of the _CollectionEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of filter parameters which can be passed as GET parameters and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return an array of [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) where each DataObject holds one result.
 
-**Ressource endpoints**  
+**Ressource endpoints**
 These endpoints should implement one of the _RessourceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the ressource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP status code.
 
 ### Supported HTTP methods
@@ -179,16 +146,108 @@ The framework is using the basic form of slim to [register a route](http://docs.
 
 In order to do this the methods need some specific parameters which are explained here for the GET endpoints but are very similar for the other endpoints:
 
-**addCollectionGetEndpoint**  
-This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint".  
-As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.  
+**addCollectionGetEndpoint**
+This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint".
+As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.
 The third parameter is an instance of [SlimBootstrap\Endpoint\CollectionGet](src/SlimBootstrap/Endpoint/CollectionGet.php).
 
-**addRessourceGetEndpoint**  
-This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId".  
-As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.  
-The third parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions.  
+**addRessourceGetEndpoint**
+This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId".
+As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint.
+The third parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions.
 Finally the fourth parameter is an instance of [SlimBootstrap\Endpoint\RessourceGet](src/SlimBootstrap/Endpoint/RessourceGet.php).
+
+## Response Output
+
+Slim-Bootstrap supports multiple response output types, which can be requested via header attribute "Accept":
+
+- [application/hal+json](http://stateless.co/hal_specification.html) __(default)__
+- json
+
+## Authentication
+
+It's possible to enable an authentication against a oauth server, to secure your api and set endpoint specific permissions. The oauth server has to provide the clientId at its /me endpoint of assigned token, to work propatly with slim-bootstraps authentication.
+
+### How it works
+
+When authentication is enabled, you have to add the url parameter `token` to api calls with an access token given from your oauth server. The authentication logic validate this token aginst the configurated oauth server via its /me endpoint. Next the collected clientId from /me endpoint is going to be validated against requested endpoint and configurated acl. If all is fine, access is granted to requester. Otherwise request is aborted with an 401 or 403.
+
+### Enable Authentication
+
+If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `apiUrl`. At the end of that value the passed access token is concatinated.
+
+~~~
+https://myserver.com/me?access_token=
+~~~
+
+Also you have to add a config/acl.json, which defines accessable endpoints for a clientId.
+~~~json
+    {
+        "roles": {
+            "role_dummy": {
+                "index": true,
+                "dummy": true
+            }
+        },
+        "access": {
+            "myDummyClientId": "role_dummy",
+        }
+    }
+~~~
+
+Last, you have to add following code parts at your ww/index.php file.
+
+~~~diff
+<?php
+require __DIR__ . '/../vendor/autoload.php';
+
+$applicationConfig = json_decode(
+    file_get_contents(__DIR__ . '/../config/application.json'),
+    true
+);
++$aclConfig         = json_decode(
++    file_get_contents(__DIR__ . '/../config/acl.json'),
++    true
++);
+
+// create logger
+$loggerFactory        = new \MonologCreator\Factory($applicationConfig['monolog']);
+$authenticationLogger = $loggerFactory->createLogger('authentication');
+$phpLogger            = $loggerFactory->createLogger('php');
+
+// register php error logger
+\Monolog\ErrorHandler::register($phpLogger);
+
++$authFactory    = new \SlimBootstrap\Authentication\Factory(
++    $applicationConfig,
++    $authenticationLogger
++);
++$authentication = $authFactory->createOauth();
+
+$bootstrap      = new \SlimBootstrap\Bootstrap(
+    $applicationConfig,
++    $authentication,
++    $aclConfig
+);
+$bootstrap->init();
+$bootstrap->addRessourceGetEndpoint(
+    '/dummy/:name',
+    'dummy',
+    array(
+        'name' => '\w+',
+    ),
+    new \DummyApi\Endpoint\Ressource\Dummy()
+);
+$bootstrap->addCollectionGetEndpoint(
+    '/dummy',
+    'dummy',
+    new \DummyApi\Endpoint\Collection\Dummy()
+);
+$bootstrap->run();
+~~~
+
+This is mapping the clientId "myDummyClientId" to the role "role_dummy" which has access to the "index" and the "dummy" endpoints.
+
 
 ## License & Authors
 - Authors:: Peter Ahrens (<pahrens@bigpoint.net>), Andreas Schleifer (<aschleifer@bigpoint.net>)
