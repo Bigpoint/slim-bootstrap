@@ -4,11 +4,11 @@ namespace SlimBootstrap\Endpoint;
 use \SlimBootstrap;
 
 /**
- * This interface represents the basic structure for the ressource endpoints.
+ * This interface represents the basic structure for the resource endpoints.
  *
  * @package SlimBootstrap\Endpoint
  */
-interface RessourcePut
+interface ResourcePut
 {
     /**
      * This function is called on a PUT request to get all data for this

@@ -12,6 +12,10 @@ use \Slim;
  */
 class Bootstrap
 {
+    const HTTP_METHOD_GET  = 'get';
+    const HTTP_METHOD_POST = 'post';
+    const HTTP_METHOD_PUT  = 'put';
+
     /**
      * @var array
      */
@@ -30,7 +34,7 @@ class Bootstrap
     /**
      * @var array
      */
-    private $_collectionGetEndpoints = array();
+    private $_collectionEndpoints = array();
 
     /**
      * @var Slim\Slim
@@ -130,7 +134,7 @@ class Bootstrap
         $responseOutputWriter = &$this->_responseOutputWriter;
 
         $indexEndpoint = new SlimBootstrap\Endpoint\Index(
-            $this->_collectionGetEndpoints
+            $this->_collectionEndpoints
         );
 
         $this->_app->get(
@@ -235,69 +239,38 @@ class Bootstrap
     }
 
     /**
-     * @param String                               $route
-     * @param String                               $name
-     * @param SlimBootstrap\Endpoint\CollectionGet $endpoint
+     * @param string $type     should be one of \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+     * @param string $route
+     * @param string $name     name of the route to add (used in ACL)
+     * @param object $endpoint should be one of \SlimBootstrap\Endpoint\Collection*
+     *
+     * @throws SlimBootstrap\Exception
      */
-    public function addCollectionGetEndpoint(
+    public function addCollectionEndpoint(
+        $type,
         $route,
         $name,
-        SlimBootstrap\Endpoint\CollectionGet $endpoint
+        $endpoint
     ) {
         $app                  = $this->_app;
         $params               = $this->_params;
         $responseOutputWriter = &$this->_responseOutputWriter;
 
-        $this->_app->get(
+        // check if $endpoint is valid
+        $interfaces = class_implements($endpoint);
+        $interface  = 'SlimBootstrap\Endpoint\Collection' . ucfirst($type);
+
+        if (false === array_key_exists($interface, $interfaces)) {
+            throw new SlimBootstrap\Exception(
+                'endpoint "' . get_class($endpoint)
+                . '" is not a valid collection ' . strtoupper($type) . ' endpoint'
+            );
+        }
+
+        // register endpoint to Slim
+        $this->_app->$type(
             $route,
-            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
-                if (false === ($endpoint instanceof SlimBootstrap\Endpoint\CollectionGet)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid collection GET endpoint'
-                    );
-                }
-
-                if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
-                    $endpoint->setClientId(
-                        $app->router()->getCurrentRoute()->getParam('clientId')
-                    );
-                }
-
-                $responseOutputWriter->write($endpoint->get($params));
-            }
-        )->name($name);
-
-        $this->_collectionGetEndpoints[$name] = $route;
-    }
-
-    /**
-     * @param String                              $route
-     * @param String                              $name
-     * @param array                               $conditions
-     * @param SlimBootstrap\Endpoint\RessourceGet $endpoint
-     */
-    public function addRessourceGetEndpoint(
-        $route,
-        $name,
-        array $conditions,
-        SlimBootstrap\Endpoint\RessourceGet $endpoint
-    ) {
-        $app                  = $this->_app;
-        $responseOutputWriter = &$this->_responseOutputWriter;
-
-        $app->get(
-            $route,
-            function () use (&$responseOutputWriter, $endpoint, $app) {
-                $params = func_get_args();
-
-                if (false === ($endpoint instanceof SlimBootstrap\Endpoint\RessourceGet)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid ressource GET endpoint'
-                    );
-                }
-
+            function () use ($type, &$responseOutputWriter, $endpoint, $params, $app) {
                 if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
                     $endpoint->setClientId(
                         $app->router()->getCurrentRoute()->getParam('clientId')
@@ -305,8 +278,7 @@ class Bootstrap
                 }
 
                 try {
-                    $responseOutputWriter->write($endpoint->get($params));
-
+                    $responseOutputWriter->write($endpoint->$type($params));
                 } catch (SlimBootstrap\Exception $e) {
                     $app->getLog()->error(
                         $e->getCode() . ' - ' . $e->getMessage()
@@ -317,74 +289,47 @@ class Bootstrap
                     $app->stop();
                 }
             }
-        )->name($name)->conditions($conditions);
-    }
-
-    /**
-     * @param String                                $route
-     * @param String                                $name
-     * @param SlimBootstrap\Endpoint\CollectionPost $endpoint
-     */
-    public function addCollectionPostEndpoint(
-        $route,
-        $name,
-        SlimBootstrap\Endpoint\CollectionPost $endpoint
-    ) {
-        $app                  = $this->_app;
-        $params               = $this->_params;
-        $responseOutputWriter = &$this->_responseOutputWriter;
-
-        $this->_app->post(
-            $route,
-            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
-                if (false === ($endpoint instanceof SlimBootstrap\Endpoint\CollectionPost)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid collection POST endpoint'
-                    );
-                }
-
-                if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
-                    $endpoint->setClientId(
-                        $app->router()->getCurrentRoute()->getParam('clientId')
-                    );
-                }
-
-                $responseOutputWriter->write(
-                    $endpoint->post($params, $app->request->post())
-                );
-            }
         )->name($name);
 
-        $this->_collectionGetEndpoints[$name] = $route;
+        // add endpoint to collection list to show on hal+json index endpoint
+        $this->_collectionEndpoints[$name] = $route;
     }
 
     /**
-     * @param String                               $route
-     * @param String                               $name
-     * @param array                                $conditions
-     * @param SlimBootstrap\Endpoint\RessourcePost $endpoint
+     * @param string $type       should be one of \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+     * @param string $route
+     * @param string $name       name of the route to add (used in ACL)
+     * @param array  $conditions
+     * @param object $endpoint   should be one of \SlimBootstrap\Endpoint\Resource*
+     *
+     * @throws SlimBootstrap\Exception
      */
-    public function addRessourcePostEndpoint(
+    public function addResourceEndpoint(
+        $type,
         $route,
         $name,
         array $conditions,
-        SlimBootstrap\Endpoint\RessourcePost $endpoint
+        $endpoint
     ) {
         $app                  = $this->_app;
         $responseOutputWriter = &$this->_responseOutputWriter;
 
-        $app->post(
-            $route,
-            function () use (&$responseOutputWriter, $endpoint, $app) {
-                $params = func_get_args();
+        // check if $endpoint is valid
+        $interfaces = class_implements($endpoint);
+        $interface  = 'SlimBootstrap\Endpoint\Resource' . ucfirst($type);
 
-                if (false === ($endpoint instanceof SlimBootstrap\Endpoint\RessourcePost)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid ressource POST endpoint'
-                    );
-                }
+        if (false === array_key_exists($interface, $interfaces)) {
+            throw new SlimBootstrap\Exception(
+                'endpoint "' . get_class($endpoint)
+                . '" is not a valid resource ' . strtoupper($type) . ' endpoint'
+            );
+        }
+
+        // register endpoint to Slim
+        $app->$type(
+            $route,
+            function () use ($type, &$responseOutputWriter, $endpoint, $app) {
+                $params = func_get_args();
 
                 if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
                     $endpoint->setClientId(
@@ -393,96 +338,7 @@ class Bootstrap
                 }
 
                 try {
-                    $responseOutputWriter->write(
-                        $endpoint->post($params, $app->request->post())
-                    );
-                } catch (SlimBootstrap\Exception $e) {
-                    $app->getLog()->error($e->getCode() . ' - ' . $e->getMessage());
-                    $app->response->setStatus($e->getCode());
-                    $app->response->setBody($e->getMessage());
-
-                    $app->stop();
-                }
-            }
-        )->name($name)->conditions($conditions);
-    }
-
-    /**
-     * @param String                               $route
-     * @param String                               $name
-     * @param SlimBootstrap\Endpoint\CollectionPut $endpoint
-     */
-    public function addCollectionPutEndpoint(
-        $route,
-        $name,
-        SlimBootstrap\Endpoint\CollectionPut $endpoint
-    ) {
-        $app                  = $this->_app;
-        $params               = $this->_params;
-        $responseOutputWriter = &$this->_responseOutputWriter;
-
-        $this->_app->put(
-            $route,
-            function () use (&$responseOutputWriter, $endpoint, $params, $app) {
-                if (false === ($endpoint instanceof SlimBootstrap\Endpoint\CollectionPut)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid collection PUT endpoint'
-                    );
-                }
-
-                if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
-                    $endpoint->setClientId(
-                        $app->router()->getCurrentRoute()->getParam('clientId')
-                    );
-                }
-
-                $responseOutputWriter->write(
-                    $endpoint->put($params, $app->request->put())
-                );
-            }
-        )->name($name);
-
-        $this->_collectionGetEndpoints[$name] = $route;
-    }
-
-    /**
-     * @param String                              $route
-     * @param String                              $name
-     * @param array                               $conditions
-     * @param SlimBootstrap\Endpoint\RessourcePut $endpoint
-     */
-    public function addRessourcePutEndpoint(
-        $route,
-        $name,
-        array $conditions,
-        SlimBootstrap\Endpoint\RessourcePut $endpoint
-    ) {
-        $app                  = $this->_app;
-        $responseOutputWriter = &$this->_responseOutputWriter;
-
-        $app->put(
-            $route,
-            function () use (&$responseOutputWriter, $endpoint, $app) {
-                $params = func_get_args();
-
-                if (false === ($endpoint instanceof SlimBootstrap\Endpoint\RessourcePut)) {
-                    throw new SlimBootstrap\Exception(
-                        'endpoint "' . get_class($endpoint)
-                        . '" is not a valid ressource PUT endpoint'
-                    );
-                }
-
-                if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
-                    $endpoint->setClientId(
-                        $app->router()->getCurrentRoute()->getParam('clientId')
-                    );
-                }
-
-                try {
-                    $responseOutputWriter->write(
-                        $endpoint->put($params, $app->request->put())
-                    );
+                    $responseOutputWriter->write($endpoint->$type($params));
                 } catch (SlimBootstrap\Exception $e) {
                     $app->getLog()->error(
                         $e->getCode() . ' - ' . $e->getMessage()
