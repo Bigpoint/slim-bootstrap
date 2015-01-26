@@ -8,14 +8,14 @@ use \Slim;
 /**
  * This class is reponsible for checking if the current user is authenticated
  * to call the API. It does that by validating the token parameter against the
- * P2 API.
+ * given oauth API.
  *
  * @package SlimBootstrap\Authentication
  */
 class Oauth implements SlimBootstrap\Authentication
 {
     /**
-     * URL of the P2 authentication service.
+     * URL of the oauth authentication service.
      *
      * @var string
      */
@@ -27,7 +27,7 @@ class Oauth implements SlimBootstrap\Authentication
     private $_logger = null;
 
     /**
-     * @param string         $apiUrl URL of the P2 authentication service
+     * @param string         $apiUrl URL of the oauth authentication service
      * @param Monolog\Logger $logger Logger instance
      */
     public function __construct($apiUrl, Monolog\Logger $logger)
@@ -59,7 +59,7 @@ class Oauth implements SlimBootstrap\Authentication
     /**
      * @param string $token Access token from the calling client
      *
-     * @return string|false The result from the CURL call against the P2 API.
+     * @return string|false The result from the cURL call against the oauth API.
      *
      * @codeCoverageIgnore This function is not tested because we can't test
      *                     curl_* calls in PHPUnit.
