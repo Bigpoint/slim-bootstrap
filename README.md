@@ -16,7 +16,7 @@ In order to configure your webserver to pass all requests in a proper way to the
 ## Setup Skeleton API
 Create a folder for your new api and run the follwing command there.
 
-Set `<YOUR_NAMESPACE>` in the following one liner to your API namespace (camel case) name and execute this line. It will load the framework and create a sceleton structure:
+Set `<YOUR_NAMESPACE>` in the following one liner to your API namespace (camel case) name and execute this line. It will load the framework and create a skeleton structure:
 
 ~~~
 NAMESPACE="<YOUR_NAMESPACE>" && composer init -n && composer require "bigpoint/slim-bootstrap:*" && ./vendor/bin/slim-bootstrap-generator "${NAMESPACE}" && composer dumpautoload
