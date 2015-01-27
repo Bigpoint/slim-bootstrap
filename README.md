@@ -34,7 +34,7 @@ In order to create a rest api based on this framework you need a structure simil
     │           └── V1
     │               ├── Collection
     │               │   └── EndpointA.php
-    │               └── Ressource
+    │               └── Resource
     │                   └── EndpointA.php
     └── www
         └── index.php
@@ -109,15 +109,17 @@ $bootstrap      = new \SlimBootstrap\Bootstrap(
     $applicationConfig
 );
 $bootstrap->init();
-$bootstrap->addRessourceGetEndpoint(
+$bootstrap->addResourceEndpoint(
+    \SlimBootstrap\Bootstrap::HTTP_METHOD_GET,
     '/dummy/:name',
     'dummy',
     array(
         'name' => '\w+',
     ),
-    new \DummyApi\Endpoint\Ressource\Dummy()
+    new \DummyApi\Endpoint\Resource\Dummy()
 );
-$bootstrap->addCollectionGetEndpoint(
+$bootstrap->addCollectionEndpoint(
+    \SlimBootstrap\Bootstrap::HTTP_METHOD_GET,
     '/dummy',
     'dummy',
     new \DummyApi\Endpoint\Collection\Dummy()
@@ -127,15 +129,15 @@ $bootstrap->run();
 
 ## Create Endpoints
 ### Collection Endpoint
-The framework supports two types of endpoints. Collection endpoints, to return multiple results and ressource endpoints to return / handle a special result.
+The framework supports two types of endpoints. Collection endpoints, to return multiple results and resource endpoints to return / handle a special result.
 
 **Collection endpoints**
 
 These endpoints should implement one of the _CollectionEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of filter parameters which can be passed as GET parameters and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return an array of [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) where each DataObject holds one result.
 
-**Ressource endpoints**
+**Resource endpoints**
 
-These endpoints should implement one of the _RessourceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the ressource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP status code.
+These endpoints should implement one of the _RessurceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the resource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP status code.
 
 ### Supported HTTP methods
 At the moment the framework supports the following HTTP methods:
@@ -144,18 +146,18 @@ At the moment the framework supports the following HTTP methods:
  - POST
  - PUT
 
-For each of these methods the framework supplies two interfaces for the Collection and Ressource endpoint under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint).
+For each of these methods the framework supplies two interfaces for the Collection and Resource endpoint under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint).
 
 ### Registering endpoints to the framework
 The written endpoints have to be registered to the framework and the underling Slim instance in order to be accessible. This can be done by calling the appropriate add methods on the [\SlimBootstrap\Bootstrap](src/SlimBootstrap/Bootstrap.php) instance after the `init()` call and before the `run()` call. The framework is using the basic form of slim to [register a route](http://docs.slimframework.com/#Routing-Overview) and bind an endpoint to the route. In order to do this the methods need some specific parameters which are explained here for the GET endpoints but are very similar for the other endpoints:
 
-**addCollectionGetEndpoint**
+**addCollectionEndpoint**
 
-This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint". As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The third parameter is an instance of [SlimBootstrap\Endpoint\CollectionGet](src/SlimBootstrap/Endpoint/CollectionGet.php).
+This methods needs a HTTP protocol for which this endpoint should be registered. This should be one of the `\SlimBootstrap\Bootstrap::HTTP_METHOD_*` constatnts. As second argument it needs a  `route` which is the relativ url it can be called as so for example "/myendpoint". As third argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The fourth parameter is an instance of [SlimBootstrap\Endpoint\Collection*](src/SlimBootstrap/Endpoint/).
 
-**addRessourceGetEndpoint**
+**addResourceEndpoint**
 
-This methods needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId". As second argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The third parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions. Finally the fourth parameter is an instance of [SlimBootstrap\Endpoint\RessourceGet](src/SlimBootstrap/Endpoint/RessourceGet.php).
+This methods needs a HTTP protocol for which this endpoint should be registered. This should be one of the `\SlimBootstrap\Bootstrap::HTTP_METHOD_*` constatnts. As second argument it needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId". As third argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The fourth parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions. Finally the fifth parameter is an instance of [SlimBootstrap\Endpoint\Resource*](src/SlimBootstrap/Endpoint/).
 
 ## Response Output
 
@@ -230,15 +232,17 @@ $bootstrap      = new \SlimBootstrap\Bootstrap(
 +    $aclConfig
 );
 $bootstrap->init();
-$bootstrap->addRessourceGetEndpoint(
+$bootstrap->addResourceEndpoint(
+    \SlimBootstrap\Bootstrap::HTTP_METHOD_GET,
     '/dummy/:name',
     'dummy',
     array(
         'name' => '\w+',
     ),
-    new \DummyApi\Endpoint\Ressource\Dummy()
+    new \DummyApi\Endpoint\Resource\Dummy()
 );
-$bootstrap->addCollectionGetEndpoint(
+$bootstrap->addCollectionEndpoint(
+    \SlimBootstrap\Bootstrap::HTTP_METHOD_GET,
     '/dummy',
     'dummy',
     new \DummyApi\Endpoint\Collection\Dummy()

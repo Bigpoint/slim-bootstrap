@@ -1,5 +1,5 @@
 <?php
-namespace ###NAMESPACE###\Endpoint\V1\Ressource;
+namespace ###NAMESPACE###\Endpoint\V1\Resource;
 
 use \###NAMESPACE###;
 use \SlimBootstrap;
@@ -7,9 +7,9 @@ use \SlimBootstrap;
 /**
  * Class Dummy
  *
- * @package ###NAMESPACE###\Endpoint\V1\Ressource
+ * @package ###NAMESPACE###\Endpoint\V1\Resource
  */
-class Dummy implements SlimBootstrap\Endpoint\RessourceGet
+class Dummy implements SlimBootstrap\Endpoint\ResourceGet
 {
     /**
      * This function is called on a GET request to get all data for this

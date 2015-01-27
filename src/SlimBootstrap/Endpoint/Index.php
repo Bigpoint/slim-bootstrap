@@ -26,7 +26,7 @@ class Index
     }
 
     /**
-     * This function creates a ressource that has links to all existing
+     * This function creates a resource that has links to all existing
      * endpoints.
      *
      * @return SlimBootstrap\DataObject
