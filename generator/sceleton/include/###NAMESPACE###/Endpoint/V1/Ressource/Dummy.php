@@ -2,14 +2,14 @@
 namespace ###NAMESPACE###\Endpoint\V1\Ressource;
 
 use \###NAMESPACE###;
-use \Rest\Api;
+use \SlimBootstrap;
 
 /**
  * Class Dummy
  *
  * @package ###NAMESPACE###\Endpoint\V1\Ressource
  */
-class Dummy implements Api\Endpoint\RessourceGet
+class Dummy implements SlimBootstrap\Endpoint\RessourceGet
 {
     /**
      * This function is called on a GET request to get all data for this
@@ -18,9 +18,9 @@ class Dummy implements Api\Endpoint\RessourceGet
      * @param array $parameters The parameters for the endpoint from the GET
      *                          request.
      *
-     * @return Api\DataObject
+     * @return SlimBootstrap\DataObject
      *
-     * @throws Api\Exception
+     * @throws SlimBootstrap\Exception
      */
     public function get(array $parameters)
     {
@@ -31,7 +31,7 @@ class Dummy implements Api\Endpoint\RessourceGet
             'value' => 'dummyValue',
         );
 
-        return new Api\DataObject(
+        return new SlimBootstrap\DataObject(
             array(
                 'dummyId' => $dummyId,
             ),

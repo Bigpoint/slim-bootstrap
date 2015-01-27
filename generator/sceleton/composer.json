@@ -1,6 +1,6 @@
 {
   "require": {
-    "bigpoint/SlimBootstrap": "1.*"
+    "bigpoint/slim-bootstrap": "1.*"
   },
   "autoload": {
     "psr-0": {

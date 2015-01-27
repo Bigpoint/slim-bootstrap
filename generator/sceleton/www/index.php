@@ -20,7 +20,8 @@ $bootstrap = new \SlimBootstrap\Bootstrap($applicationConfig);
 $bootstrap->init();
 
 // --- V1 Endpoints - begin ---
-$bootstrap->addRessourceGetEndpoint(
+$bootstrap->addRessourceEndpoint(
+    \SlimBootstrap\Bootstrap::HTTP_METHOD_GET,
     '/v1/dummy/:dummyId',
     'dummy',
     array(
@@ -28,7 +29,8 @@ $bootstrap->addRessourceGetEndpoint(
     ),
     new \###NAMESPACE###\Endpoint\V1\Ressource\Dummy()
 );
-$bootstrap->addCollectionGetEndpoint(
+$bootstrap->addCollectionEndpoint(
+    \SlimBootstrap\Bootstrap::HTTP_METHOD_GET,
     '/v1/dummy',
     'dummy',
     new \###NAMESPACE###\Endpoint\V1\Collection\Dummy()
