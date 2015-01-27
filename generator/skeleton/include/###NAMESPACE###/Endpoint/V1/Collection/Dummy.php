@@ -2,14 +2,14 @@
 namespace ###NAMESPACE###\Endpoint\V1\Collection;
 
 use \###NAMESPACE###;
-use \Rest\Api;
+use \SlimBootstrap;
 
 /**
  * Class Dummy
  *
  * @package ###NAMESPACE###\Endpoint\V1\Collection
  */
-class Dummy implements Api\Endpoint\CollectionGet
+class Dummy implements SlimBootstrap\Endpoint\CollectionGet
 {
     /**
      * This function is called on a GET request to get all data for this
@@ -22,7 +22,7 @@ class Dummy implements Api\Endpoint\CollectionGet
     public function get(array $filters)
     {
         $data = array(
-            new Api\DataObject(
+            new SlimBootstrap\DataObject(
                 array(
                     'dummyId' => 1,
                 ),
@@ -32,7 +32,7 @@ class Dummy implements Api\Endpoint\CollectionGet
                     'value' => 'dummyValue1',
                 )
             ),
-            new Api\DataObject(
+            new SlimBootstrap\DataObject(
                 array(
                     'dummyId' => 2,
                 ),

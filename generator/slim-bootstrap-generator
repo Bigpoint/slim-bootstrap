@@ -1,6 +1,6 @@
 #!/bin/bash
 
-basefolder="./vendor/bigpoint/slim-bootstrap/generator/sceleton/"
+basefolder="./vendor/bigpoint/slim-bootstrap/generator/skeleton/"
 
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <namespace>"
@@ -10,7 +10,7 @@ fi
 namespace="$1"
 namespace_lower="$(echo ${namespace} | tr '[:upper:]' '[:lower:]')"
 
-echo -e "\e[1mGenerating sceleton for \e[34m${namespace}\e[1;39m ...\e[0m"
+echo -e "\e[1mGenerating skeleton for \e[34m${namespace}\e[1;39m ...\e[0m"
 
 for template in $(find "${basefolder}" -type f -not -name ".lock"); do
     file=${template//${basefolder}/}
