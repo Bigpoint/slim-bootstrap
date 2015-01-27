@@ -3,15 +3,15 @@ namespace SlimBootstrap;
 
 /**
  * This class represents a result set for the endpoints.
- * One instance represents a HAL+JSON ressource for one specific embedded
- * ressource.
+ * One instance represents a HAL+JSON resource for one specific embedded
+ * resource.
  *
  * @package SlimBootstrap
  */
 class DataObject
 {
     /**
-     * The identifiers to show in the HAL+JSON output how this ressource is
+     * The identifiers to show in the HAL+JSON output how this resource is
      * identified.
      *
      * @var array
@@ -26,7 +26,7 @@ class DataObject
     private $_data = array();
 
     /**
-     * The links to show in the HAL+JSON output for this ressource.
+     * The links to show in the HAL+JSON output for this resource.
      *
      * @var array
      */
@@ -36,7 +36,7 @@ class DataObject
      * @param array $identifiers The identifiers to show in the HAL+JSON output.
      * @param array $data        The actual data to pass to the output.
      * @param array $links       The links to show in the HAL+JSON output for
-     *                           this ressource.
+     *                           this resource.
      */
     public function __construct(
         array $identifiers,
@@ -49,7 +49,7 @@ class DataObject
     }
 
     /**
-     * Returns the HAL+JSON identifiers for this ressource.
+     * Returns the HAL+JSON identifiers for this resource.
      *
      * @return array
      */
@@ -59,7 +59,7 @@ class DataObject
     }
 
     /**
-     * Returns the actual payload of this ressource.
+     * Returns the actual payload of this resource.
      *
      * @return array
      */
@@ -69,7 +69,7 @@ class DataObject
     }
 
     /**
-     * Returns the links for this HAL+JSON ressource.
+     * Returns the links for this HAL+JSON resource.
      *
      * @return array
      */
