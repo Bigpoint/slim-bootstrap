@@ -10,6 +10,7 @@ fi
 namespace="$1"
 namespace_lower="$(echo ${namespace} | tr '[:upper:]' '[:lower:]' | sed 's:\\:-:g')"
 namespace_folder="$(echo ${namespace} | sed 's:\\:/:g')"
+namespace_escaped="$(echo ${namespace} | sed 's:\\:\\\\\\\\:g')"
 namespace="$(echo ${namespace} | sed 's:\\:\\\\:g')"
 
 echo -e "\e[1mGenerating skeleton for \e[34m${namespace}\e[1;39m ...\e[0m"
@@ -26,6 +27,7 @@ for template in $(find "${basefolder}" -type f -not -name ".lock"); do
     mkdir -p "${dir}"
 
     sed "s:###NAMESPACE###:${namespace}:g" "${template}" > "${file}"
+    sed -i -e "s:###NAMESPACE_ESCAPED###:${namespace_escaped}:g" "${file}"
     sed -i -e "s:###NAMESPACE_LOWER###:${namespace_lower}:g" "${file}"
 done
 
