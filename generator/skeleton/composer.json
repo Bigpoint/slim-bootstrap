@@ -4,7 +4,7 @@
   },
   "autoload": {
     "psr-0": {
-      "Test\\Partner\\": "include/"
+      "###NAMESPACE_ESCAPED###\\": "include/"
     }
   }
 }
