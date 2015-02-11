@@ -173,8 +173,7 @@ class Bootstrap
                     $this->_app->request,
                     $this->_app->response,
                     $this->_app->response->headers,
-                    $this->_applicationConfig['shortName'],
-                    $this->_app->getLog()
+                    $this->_applicationConfig['shortName']
                 );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
@@ -228,7 +227,8 @@ class Bootstrap
                 $this->_app->getLog()->info('access granted');
             }
         } catch (SlimBootstrap\Exception $e) {
-            $this->_app->getLog()->error(
+            $this->_app->getLog()->log(
+                $e->getLogLevel(),
                 $e->getCode() . ' - ' . $e->getMessage()
             );
             $this->_app->response->setStatus($e->getCode());
@@ -282,7 +282,8 @@ class Bootstrap
                         $endpoint->$type($params, $app->request->$type())
                     );
                 } catch (SlimBootstrap\Exception $e) {
-                    $app->getLog()->error(
+                    $app->getLog()->log(
+                        $e->getLogLevel(),
                         $e->getCode() . ' - ' . $e->getMessage()
                     );
                     $app->response->setStatus($e->getCode());
@@ -344,7 +345,8 @@ class Bootstrap
                         $endpoint->$type($params, $app->request->$type())
                     );
                 } catch (SlimBootstrap\Exception $e) {
-                    $app->getLog()->error(
+                    $app->getLog()->log(
+                        $e->getLogLevel(),
                         $e->getCode() . ' - ' . $e->getMessage()
                     );
                     $app->response->setStatus($e->getCode());

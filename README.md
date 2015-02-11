@@ -137,7 +137,7 @@ These endpoints should implement one of the _CollectionEndpoint_ interfaces loca
 
 **Resource endpoints**
 
-These endpoints should implement one of the _RessurceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the resource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. The message of that exception will be printed out as result and the code will be used as HTTP status code.
+These endpoints should implement one of the _RessurceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the resource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. When an exception is thrown, the optional third parameter defines the log level with which this exception will be logged. The default is "ERROR". The message of that exception will be printed out as result and the code will be used as HTTP status code.
 
 ### Supported HTTP methods
 At the moment the framework supports the following HTTP methods:
