@@ -278,7 +278,9 @@ class Bootstrap
                 }
 
                 try {
-                    $responseOutputWriter->write($endpoint->$type($params));
+                    $responseOutputWriter->write(
+                        $endpoint->$type($params, $app->$type())
+                    );
                 } catch (SlimBootstrap\Exception $e) {
                     $app->getLog()->error(
                         $e->getCode() . ' - ' . $e->getMessage()
@@ -338,7 +340,9 @@ class Bootstrap
                 }
 
                 try {
-                    $responseOutputWriter->write($endpoint->$type($params));
+                    $responseOutputWriter->write(
+                        $endpoint->$type($params, $app->$type())
+                    );
                 } catch (SlimBootstrap\Exception $e) {
                     $app->getLog()->error(
                         $e->getCode() . ' - ' . $e->getMessage()
