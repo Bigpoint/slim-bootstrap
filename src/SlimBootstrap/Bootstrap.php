@@ -279,7 +279,7 @@ class Bootstrap
 
                 try {
                     $responseOutputWriter->write(
-                        $endpoint->$type($params, $app->$type())
+                        $endpoint->$type($params, $app->request->$type())
                     );
                 } catch (SlimBootstrap\Exception $e) {
                     $app->getLog()->log(
@@ -342,7 +342,7 @@ class Bootstrap
 
                 try {
                     $responseOutputWriter->write(
-                        $endpoint->$type($params, $app->$type())
+                        $endpoint->$type($params, $app->request->$type())
                     );
                 } catch (SlimBootstrap\Exception $e) {
                     $app->getLog()->log(
