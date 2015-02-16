@@ -50,7 +50,11 @@ class Oauth implements SlimBootstrap\Authentication
         if (null === $result
             || false === array_key_exists('entity_id', $result)
         ) {
-            throw new SlimBootstrap\Exception('Access token invalid', 401);
+            throw new SlimBootstrap\Exception(
+                'Access token invalid',
+                401,
+                \Slim\Log::WARN
+            );
         }
 
         return $result['entity_id'];
