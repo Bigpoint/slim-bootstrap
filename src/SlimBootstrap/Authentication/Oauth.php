@@ -102,17 +102,6 @@ class Oauth implements SlimBootstrap\Authentication
             $this->_logger->addError(
                 'curl call error: ' . $responseCode . ' url: ' . $url
             );
-        } elseif ($responseCode >= 400) {
-            if ($responseCode === 404) {
-                $this->_logger->addRecord(
-                    Monolog\Logger::WARNING,
-                    'curl call: ' . $responseCode . ' url: ' . $url
-                );
-            } else {
-                $this->_logger->addWarning(
-                    'curl call warning: ' . $responseCode . ' url: ' . $url
-                );
-            }
         } elseif ($responseCode >= 300) {
             $this->_logger->addWarning(
                 'curl call warning: ' . $responseCode . ' url: ' . $url
