@@ -50,7 +50,11 @@ class Oauth implements SlimBootstrap\Authentication
         if (null === $result
             || false === array_key_exists('entity_id', $result)
         ) {
-            throw new SlimBootstrap\Exception('Access token invalid', 401);
+            throw new SlimBootstrap\Exception(
+                'Access token invalid',
+                401,
+                \Slim\Log::WARN
+            );
         }
 
         return $result['entity_id'];
@@ -90,14 +94,18 @@ class Oauth implements SlimBootstrap\Authentication
         if (0 !== $curlErrno) {
             $this->_logger->addError(
                 'curl error (' . $curlErrno . '): ' . $curlError
+                . ' url: ' . $url
             );
         }
 
-        if ($responseCode >= 400) {
-            $this->_logger->addError('curl call error: ' . $responseCode);
-
+        if ($responseCode >= 500) {
+            $this->_logger->addError(
+                'curl call error: ' . $responseCode . ' url: ' . $url
+            );
         } elseif ($responseCode >= 300) {
-            $this->_logger->addWarning('curl call warning: ' . $responseCode);
+            $this->_logger->addWarning(
+                'curl call warning: ' . $responseCode . ' url: ' . $url
+            );
         }
 
         $this->_logger->addDebug(
