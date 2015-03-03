@@ -144,6 +144,15 @@ class Bootstrap
             }
         )->name('index');
 
+        $infoEndpoint = new SlimBootstrap\Endpoint\Info();
+
+        $this->_app->get(
+            '/info',
+            function () use (&$responseOutputWriter, $infoEndpoint) {
+                $responseOutputWriter->write($infoEndpoint->get());
+            }
+        )->name('info');
+
         $this->_app->run();
     }
 
