@@ -24,30 +24,40 @@ class InfoTest extends \PHPUnit_Framework_TestCase
             array(
                 '_loadComposerFile',
                 '_getGitVersion',
+                '_getRepoUrl',
             )
         );
     }
 
     /**
-     * @param array $composerData
-     * @param array $packages
+     * @param array  $composerData
+     * @param array  $packages
+     * @param string $repoUrl
      *
      * @dataProvider getDataProvider
      */
-    public function testGet(array $composerData, array $packages)
+    public function testGet(array $composerData, array $packages, $repoUrl)
     {
+        $version = 'mockVersion';
+
         $this->_infoEndpoint
             ->expects($this->exactly(1))
             ->method('_getGitVersion')
-            ->will($this->returnValue('mockVersion'));
+            ->will($this->returnValue($version));
         $this->_infoEndpoint
             ->expects($this->exactly(1))
             ->method('_loadComposerFile')
             ->will($this->returnValue($composerData));
+        $this->_infoEndpoint
+            ->expects($this->exactly(1))
+            ->method('_getRepoUrl')
+            ->with($this->equalTo($version))
+            ->will($this->returnValue($repoUrl));
 
         $expected = new DataObject(
             array(),
             array(
+                'repoUrl'  => $repoUrl,
                 'version'  => 'mockVersion',
                 'packages' => $packages,
             )
@@ -66,12 +76,14 @@ class InfoTest extends \PHPUnit_Framework_TestCase
             array(
                 'composerData' => array(),
                 'packages'     => array(),
+                'repoUrl'      => '',
             ),
             array(
                 'composerData' => array(
                     'packages' => array(),
                 ),
                 'packages'     => array(),
+                'repoUrl'      => '',
             ),
             array(
                 'composerData' => array(
@@ -90,6 +102,7 @@ class InfoTest extends \PHPUnit_Framework_TestCase
                         'packageUrl'    => 'https://packagist.org/packages/mockName1#mockVersion1',
                     ),
                 ),
+                'repoUrl'      => '',
             ),
             array(
                 'composerData' => array(
@@ -112,6 +125,7 @@ class InfoTest extends \PHPUnit_Framework_TestCase
                         'packageUrl'    => 'https://packagist.org/packages/mockName1#dev-mockVersion1',
                     ),
                 ),
+                'repoUrl'      => '',
             ),
             array(
                 'composerData' => array(
@@ -130,6 +144,7 @@ class InfoTest extends \PHPUnit_Framework_TestCase
                         'packageUrl'    => 'https://packagist.bigpoint.net/packages/mockName1#mockVersion1',
                     ),
                 ),
+                'repoUrl'      => 'mockUrl',
             ),
         );
     }

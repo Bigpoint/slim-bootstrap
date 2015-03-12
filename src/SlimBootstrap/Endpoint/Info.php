@@ -17,9 +17,12 @@ class Info
             __DIR__ . '/../../../../../../composer.lock'
         );
 
+        $repoUrl = $this->_getRepoUrl($gitVersion);
+
         return new SlimBootstrap\DataObject(
             array(),
             array(
+                'repoUrl'  => $repoUrl,
                 'version'  => $gitVersion,
                 'packages' => $composerData,
             )
@@ -98,5 +101,34 @@ class Info
                 'git describe --tags --exact-match || git symbolic-ref -q --short HEAD'
             )
         );
+    }
+
+    /**
+     * @param string $gitVersion
+     *
+     * @return string
+     *
+     * @codeCoverageIgnore
+     */
+    protected function _getRepoUrl($gitVersion)
+    {
+        $gitUrl = trim(shell_exec('git config --get remote.origin.url'));
+
+        if ('' !== $gitUrl) {
+            $repoUrl = explode('@', $gitUrl);
+            return 'https://' . str_replace(
+                array(
+                    ':',
+                    '.git',
+                ),
+                array(
+                    '/',
+                    '/tree/' . $gitVersion,
+                ),
+                $repoUrl[1]
+            );
+        }
+
+        return '';
     }
 }
