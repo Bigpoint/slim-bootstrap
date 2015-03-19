@@ -52,6 +52,15 @@ class Bootstrap
     private $_params = array();
 
     /**
+     * Array that defines if the current endpoints wants authentication or not.
+     * This array is only used if authentication in general is enabled. The
+     * idea is to be able to disable authentication for one specific endpoint.
+     *
+     * @var array
+     */
+    private $_endpointAuthentication = array();
+
+    /**
      * @param array                        $applicationConfig
      * @param SlimBootstrap\Authentication $authentication
      * @param array                        $aclConfig
@@ -190,6 +199,16 @@ class Bootstrap
 
             // use authentication for api
             if (null !== $this->_authentication) {
+                $currentRoute = $this->_app->router->getCurrentRoute();
+                $routeId      = $this->_app->environment->offsetGet(
+                    'REQUEST_METHOD'
+                ) . $currentRoute->getPattern();
+
+                if (true === array_key_exists($routeId, $this->_endpointAuthentication)
+                    && false === $this->_endpointAuthentication[$routeId]
+                ) {
+                    return;
+                }
 
                 if (false === is_array($this->_aclConfig)) {
                     throw new SlimBootstrap\Exception(
@@ -214,24 +233,18 @@ class Bootstrap
                  * again because slim doesn't allow to set a new parameter
                  * directly.
                  */
-                $params = $this->_app->router()->getCurrentRoute()->getParams();
+                $params             = $currentRoute->getParams();
                 $params['clientId'] = $clientId;
-                $this->_app->router()->getCurrentRoute()->setParams($params);
+                $currentRoute->setParams($params);
 
                 $this->_app->getLog()->notice(
                     'set clientId to parameter: ' . $clientId
                 );
                 $this->_app->getLog()->debug(
-                    var_export(
-                        $this->_app->router()->getCurrentRoute()->getParams(),
-                        true
-                    )
+                    var_export($currentRoute->getParams(), true)
                 );
 
-                $acl->access(
-                    $clientId,
-                    $this->_app->router()->getCurrentRoute()->getName()
-                );
+                $acl->access($clientId, $currentRoute->getName());
 
                 $this->_app->getLog()->info('access granted');
             }
@@ -248,10 +261,15 @@ class Bootstrap
     }
 
     /**
-     * @param string $type     should be one of \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+     * @param string $type           should be one of
+     *                               \SlimBootstrap\Bootstrap::HTTP_METHOD_*
      * @param string $route
-     * @param string $name     name of the route to add (used in ACL)
-     * @param object $endpoint should be one of \SlimBootstrap\Endpoint\Collection*
+     * @param string $name           name of the route to add (used in ACL)
+     * @param object $endpoint       should be one of
+     *                               \SlimBootstrap\Endpoint\Collection*
+     * @param bool   $authentication set this to false if you want no
+     *                               authentication for this endpoint
+     *                               (default: true)
      *
      * @throws SlimBootstrap\Exception
      */
@@ -259,7 +277,8 @@ class Bootstrap
         $type,
         $route,
         $name,
-        $endpoint
+        $endpoint,
+        $authentication = true
     ) {
         $app                  = $this->_app;
         $params               = $this->_params;
@@ -272,9 +291,13 @@ class Bootstrap
         if (false === array_key_exists($interface, $interfaces)) {
             throw new SlimBootstrap\Exception(
                 'endpoint "' . get_class($endpoint)
-                . '" is not a valid collection ' . strtoupper($type) . ' endpoint'
+                . '" is not a valid collection ' . strtoupper($type)
+                . ' endpoint'
             );
         }
+
+        $this->_endpointAuthentication[strtoupper($type) . $route]
+            = $authentication;
 
         // register endpoint to Slim
         $this->_app->$type(
@@ -308,11 +331,16 @@ class Bootstrap
     }
 
     /**
-     * @param string $type       should be one of \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+     * @param string $type           should be one of
+     *                               \SlimBootstrap\Bootstrap::HTTP_METHOD_*
      * @param string $route
-     * @param string $name       name of the route to add (used in ACL)
+     * @param string $name           name of the route to add (used in ACL)
      * @param array  $conditions
-     * @param object $endpoint   should be one of \SlimBootstrap\Endpoint\Resource*
+     * @param object $endpoint       should be one of
+     *                               \SlimBootstrap\Endpoint\Resource*
+     * @param bool   $authentication set this to false if you want no
+     *                               authentication for this endpoint
+     *                               (default: true)
      *
      * @throws SlimBootstrap\Exception
      */
@@ -321,7 +349,8 @@ class Bootstrap
         $route,
         $name,
         array $conditions,
-        $endpoint
+        $endpoint,
+        $authentication = true
     ) {
         $app                  = $this->_app;
         $responseOutputWriter = &$this->_responseOutputWriter;
@@ -336,6 +365,9 @@ class Bootstrap
                 . '" is not a valid resource ' . strtoupper($type) . ' endpoint'
             );
         }
+
+        $this->_endpointAuthentication[strtoupper($type) . $route]
+            = $authentication;
 
         // register endpoint to Slim
         $app->$type(
