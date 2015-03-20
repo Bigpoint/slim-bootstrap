@@ -13,9 +13,10 @@ use \Slim;
  */
 class Bootstrap
 {
-    const HTTP_METHOD_GET  = 'get';
-    const HTTP_METHOD_POST = 'post';
-    const HTTP_METHOD_PUT  = 'put';
+    const HTTP_METHOD_DELETE = 'delete';
+    const HTTP_METHOD_GET    = 'get';
+    const HTTP_METHOD_POST   = 'post';
+    const HTTP_METHOD_PUT    = 'put';
 
     /**
      * @var array
