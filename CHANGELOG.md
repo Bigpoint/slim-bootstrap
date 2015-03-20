@@ -1,5 +1,56 @@
 # Changelog
 
+## 1.3.0
+ - feature: endpoints can now specify explicitly that they don't want authorization even if it is globally enabled. This can be done by passing a new optional parameter to the register endpoint functions.
+~~~php
+/**
+ * @param string $type           should be one of
+ *                               \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+ * @param string $route
+ * @param string $name           name of the route to add (used in ACL)
+ * @param object $endpoint       should be one of
+ *                               \SlimBootstrap\Endpoint\Collection*
+ * @param bool   $authentication set this to false if you want no
+ *                               authentication for this endpoint
+ *                               (default: true)
+ *
+ * @throws SlimBootstrap\Exception
+ */
+public function addCollectionEndpoint(
+    $type,
+    $route,
+    $name,
+    $endpoint,
+    $authentication = true
+);
+
+/**
+ * @param string $type           should be one of
+ *                               \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+ * @param string $route
+ * @param string $name           name of the route to add (used in ACL)
+ * @param array  $conditions
+ * @param object $endpoint       should be one of
+ *                               \SlimBootstrap\Endpoint\Resource*
+ * @param bool   $authentication set this to false if you want no
+ *                               authentication for this endpoint
+ *                               (default: true)
+ *
+ * @throws SlimBootstrap\Exception
+ */
+public function addResourceEndpoint(
+    $type,
+    $route,
+    $name,
+    array $conditions,
+    $endpoint,
+    $authentication = true
+);
+~~~
+
+## 1.2.0
+ - feature: every implementation of this library now provides an `/info` endpoint which shows what composer dependencies are present. Further more it shows the git tag version and the git repo url if it finds a git environment
+
 ## 1.1.0
  - bugfix: generator can now work with sub namespaces
  - bugfix: payload is passed again to endpoints when using http method `POST` or `PUT`

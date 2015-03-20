@@ -2,6 +2,7 @@
 namespace SlimBootstrap;
 
 use \Flynsarmy\SlimMonolog;
+use \MonologCreator;
 use \SlimBootstrap;
 use \Slim;
 
@@ -42,14 +43,14 @@ class Bootstrap
     private $_app = null;
 
     /**
-     * @var SlimBootstrap\ResponseOutputWriter
-     */
-    private $_responseOutputWriter = null;
-
-    /**
      * @var array
      */
     private $_params = array();
+
+    /**
+     * @var SlimBootstrap\Hook
+     */
+    private $_hook = null;
 
     /**
      * @param array                        $applicationConfig
@@ -71,7 +72,8 @@ class Bootstrap
      */
     public function init()
     {
-        $loggerFactory = new \MonologCreator\Factory(
+        // create logger
+        $loggerFactory = new MonologCreator\Factory(
             $this->_applicationConfig['monolog']
         );
         $handlers = $loggerFactory->createHandlers(
@@ -80,7 +82,6 @@ class Bootstrap
         $processors = $loggerFactory->createProcessors(
             $this->_applicationConfig['monolog']['logger']['slim']
         );
-
         $logger = new SlimMonolog\Log\MonologWriter(
             array(
                 'handlers'   => $handlers,
@@ -88,6 +89,7 @@ class Bootstrap
             )
         );
 
+        // create application
         $this->_app = new Slim\Slim(
             array(
                 'debug'       => $this->_applicationConfig['debug'],
@@ -97,33 +99,39 @@ class Bootstrap
             )
         );
 
-        $this->_params = $this->_app->request->get();
-        unset($this->_params['token']);
+        // create hook handler
+        $this->_hook = new SlimBootstrap\Hook(
+            $this->_applicationConfig,
+            $this->_app,
+            $this->_authentication,
+            $this->_aclConfig
+        );
 
-        $app = $this->_app;
-
+        // define hooks
         $this->_app->hook(
             'slim.before.router',
-            function () use ($app) {
-                $app->getLog()->debug(
-                    'Request path: ' . $app->request->getPathInfo()
-                );
-            }
+            array($this->_hook, 'requestPath')
+        );
+        $this->_app->hook(
+            'slim.before.router',
+            array($this->_hook, 'cacheAndAccessHeader')
+        );
+        $this->_app->hook(
+            'slim.before.router',
+            array($this->_hook, 'outputWriter')
         );
         $this->_app->hook(
             'slim.before.dispatch',
-            array($this, 'authenticationHook')
+            array($this->_hook, 'authentication')
         );
         $this->_app->hook(
             'slim.after.router',
-            function () use ($app) {
-                $app->etag(md5($app->response->getBody()));
-
-                $app->getLog()->debug(
-                    'Response status: ' . $app->response->getStatus()
-                );
-            }
+            array($this->_hook, 'responseStatus')
         );
+
+        // remove token from GET params
+        $this->_params = $this->_app->request->get();
+        unset($this->_params['token']);
     }
 
     /**
@@ -131,12 +139,12 @@ class Bootstrap
      */
     public function run()
     {
-        $responseOutputWriter = &$this->_responseOutputWriter;
+        $responseOutputWriter = &$this->_hook->getResponseOutputWriter();
 
+        // define index endpoint
         $indexEndpoint = new SlimBootstrap\Endpoint\Index(
             $this->_collectionEndpoints
         );
-
         $this->_app->get(
             '/',
             function () use (&$responseOutputWriter, $indexEndpoint) {
@@ -144,8 +152,8 @@ class Bootstrap
             }
         )->name('index');
 
+        // define info endpoint
         $infoEndpoint = new SlimBootstrap\Endpoint\Info();
-
         $this->_app->get(
             '/info',
             function () use (&$responseOutputWriter, $infoEndpoint) {
@@ -157,84 +165,46 @@ class Bootstrap
     }
 
     /**
-     * This hook is run before the actual route is dispatched and enforces
-     * the authentication and ACL if these are provided.
-     * Furthermore it sets the Access-Control-Allow-Origin to * and sets
-     * the cache duration to the value specified in the config.
+     * @param string $httpType
+     * @param object $endpoint
+     * @param string $endpointType
+     *
+     * @throws SlimBootstrap\Exception
      */
-    public function authenticationHook()
+    private function _validateEndpoint($httpType, $endpoint, $endpointType)
     {
+        $interfaces = class_implements($endpoint);
+        $interface  = 'SlimBootstrap\Endpoint\\'
+            . $endpointType . ucfirst($httpType);
+
+        if (false === array_key_exists($interface, $interfaces)) {
+            throw new SlimBootstrap\Exception(
+                'endpoint "' . get_class($endpoint)
+                . '" is not a valid collection ' . strtoupper($httpType)
+                . ' endpoint'
+            );
+        }
+    }
+
+    /**
+     * @param object $endpoint
+     * @param string $type
+     * @param array  $params
+     *
+     * @throws Slim\Exception\Stop
+     */
+    private function _handleEndpointCall($endpoint, $type, array $params)
+    {
+        if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
+            $endpoint->setClientId(
+                $this->_app->router()->getCurrentRoute()->getParam('clientId')
+            );
+        }
+
         try {
-            $this->_app->response->headers->set(
-                'Access-Control-Allow-Origin',
-                '*'
+            $this->_hook->getResponseOutputWriter()->write(
+                $endpoint->$type($params, $this->_app->request->$type())
             );
-            $this->_app->expires(
-                date(
-                    'D, d M Y H:i:s O',
-                    time() + $this->_applicationConfig['cacheDuration']
-                )
-            );
-
-            // create output writer
-            $responseOutputWriterFactory =
-                new SlimBootstrap\ResponseOutputWriter\Factory(
-                    $this->_app->request,
-                    $this->_app->response,
-                    $this->_app->response->headers,
-                    $this->_applicationConfig['shortName']
-                );
-            $this->_responseOutputWriter = $responseOutputWriterFactory->create(
-                $this->_app->request->headers->get('Accept')
-            );
-
-            // use authentication for api
-            if (null !== $this->_authentication) {
-
-                if (false === is_array($this->_aclConfig)) {
-                    throw new SlimBootstrap\Exception(
-                        'acl config is empty or invalid',
-                        500
-                    );
-                }
-
-                $this->_app->getLog()->info('using authentication');
-
-                $acl = new SlimBootstrap\Acl($this->_aclConfig);
-
-                $clientId = $this->_authentication->authenticate(
-                    $this->_app->request->get('token')
-                );
-
-                $this->_app->getLog()->info('authentication successfull');
-
-                /*
-                 * Inject the clientId into the parameters.
-                 * We have to get all parameters, change the array and set it
-                 * again because slim doesn't allow to set a new parameter
-                 * directly.
-                 */
-                $params = $this->_app->router()->getCurrentRoute()->getParams();
-                $params['clientId'] = $clientId;
-                $this->_app->router()->getCurrentRoute()->setParams($params);
-
-                $this->_app->getLog()->notice(
-                    'set clientId to parameter: ' . $clientId
-                );
-                $this->_app->getLog()->debug(
-                    var_export(
-                        $this->_app->router()->getCurrentRoute()->getParams(),
-                        true
-                    )
-                );
-
-                $acl->access(
-                    $clientId,
-                    $this->_app->router()->getCurrentRoute()->getName()
-                );
-
-                $this->_app->getLog()->info('access granted');
-            }
         } catch (SlimBootstrap\Exception $e) {
             $this->_app->getLog()->log(
                 $e->getLogLevel(),
@@ -248,10 +218,15 @@ class Bootstrap
     }
 
     /**
-     * @param string $type     should be one of \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+     * @param string $type           should be one of
+     *                               \SlimBootstrap\Bootstrap::HTTP_METHOD_*
      * @param string $route
-     * @param string $name     name of the route to add (used in ACL)
-     * @param object $endpoint should be one of \SlimBootstrap\Endpoint\Collection*
+     * @param string $name           name of the route to add (used in ACL)
+     * @param object $endpoint       should be one of
+     *                               \SlimBootstrap\Endpoint\Collection*
+     * @param bool   $authentication set this to false if you want no
+     *                               authentication for this endpoint
+     *                               (default: true)
      *
      * @throws SlimBootstrap\Exception
      */
@@ -259,47 +234,23 @@ class Bootstrap
         $type,
         $route,
         $name,
-        $endpoint
+        $endpoint,
+        $authentication = true
     ) {
-        $app                  = $this->_app;
-        $params               = $this->_params;
-        $responseOutputWriter = &$this->_responseOutputWriter;
+        $params = $this->_params;
 
-        // check if $endpoint is valid
-        $interfaces = class_implements($endpoint);
-        $interface  = 'SlimBootstrap\Endpoint\Collection' . ucfirst($type);
+        $this->_validateEndpoint($type, $endpoint, 'Collection');
 
-        if (false === array_key_exists($interface, $interfaces)) {
-            throw new SlimBootstrap\Exception(
-                'endpoint "' . get_class($endpoint)
-                . '" is not a valid collection ' . strtoupper($type) . ' endpoint'
-            );
-        }
+        $this->_hook->setEndpointAuthentication(
+            strtoupper($type) . $route,
+            $authentication
+        );
 
         // register endpoint to Slim
         $this->_app->$type(
             $route,
-            function () use ($type, &$responseOutputWriter, $endpoint, $params, $app) {
-                if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
-                    $endpoint->setClientId(
-                        $app->router()->getCurrentRoute()->getParam('clientId')
-                    );
-                }
-
-                try {
-                    $responseOutputWriter->write(
-                        $endpoint->$type($params, $app->request->$type())
-                    );
-                } catch (SlimBootstrap\Exception $e) {
-                    $app->getLog()->log(
-                        $e->getLogLevel(),
-                        $e->getCode() . ' - ' . $e->getMessage()
-                    );
-                    $app->response->setStatus($e->getCode());
-                    $app->response->setBody($e->getMessage());
-
-                    $app->stop();
-                }
+            function () use ($type, $endpoint, $params) {
+                $this->_handleEndpointCall($endpoint, $type, $params);
             }
         )->name($name);
 
@@ -308,11 +259,16 @@ class Bootstrap
     }
 
     /**
-     * @param string $type       should be one of \SlimBootstrap\Bootstrap::HTTP_METHOD_*
+     * @param string $type           should be one of
+     *                               \SlimBootstrap\Bootstrap::HTTP_METHOD_*
      * @param string $route
-     * @param string $name       name of the route to add (used in ACL)
+     * @param string $name           name of the route to add (used in ACL)
      * @param array  $conditions
-     * @param object $endpoint   should be one of \SlimBootstrap\Endpoint\Resource*
+     * @param object $endpoint       should be one of
+     *                               \SlimBootstrap\Endpoint\Resource*
+     * @param bool   $authentication set this to false if you want no
+     *                               authentication for this endpoint
+     *                               (default: true)
      *
      * @throws SlimBootstrap\Exception
      */
@@ -321,48 +277,23 @@ class Bootstrap
         $route,
         $name,
         array $conditions,
-        $endpoint
+        $endpoint,
+        $authentication = true
     ) {
-        $app                  = $this->_app;
-        $responseOutputWriter = &$this->_responseOutputWriter;
+        $this->_validateEndpoint($type, $endpoint, 'Resource');
 
-        // check if $endpoint is valid
-        $interfaces = class_implements($endpoint);
-        $interface  = 'SlimBootstrap\Endpoint\Resource' . ucfirst($type);
-
-        if (false === array_key_exists($interface, $interfaces)) {
-            throw new SlimBootstrap\Exception(
-                'endpoint "' . get_class($endpoint)
-                . '" is not a valid resource ' . strtoupper($type) . ' endpoint'
-            );
-        }
+        $this->_hook->setEndpointAuthentication(
+            strtoupper($type) . $route,
+            $authentication
+        );
 
         // register endpoint to Slim
-        $app->$type(
+        $this->_app->$type(
             $route,
-            function () use ($type, &$responseOutputWriter, $endpoint, $app) {
+            function () use ($type, $endpoint) {
                 $params = func_get_args();
 
-                if ($endpoint instanceof SlimBootstrap\Endpoint\InjectClientId) {
-                    $endpoint->setClientId(
-                        $app->router()->getCurrentRoute()->getParam('clientId')
-                    );
-                }
-
-                try {
-                    $responseOutputWriter->write(
-                        $endpoint->$type($params, $app->request->$type())
-                    );
-                } catch (SlimBootstrap\Exception $e) {
-                    $app->getLog()->log(
-                        $e->getLogLevel(),
-                        $e->getCode() . ' - ' . $e->getMessage()
-                    );
-                    $app->response->setStatus($e->getCode());
-                    $app->response->setBody($e->getMessage());
-
-                    $app->stop();
-                }
+                $this->_handleEndpointCall($endpoint, $type, $params);
             }
         )->name($name)->conditions($conditions);
     }
