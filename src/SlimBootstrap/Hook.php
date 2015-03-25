@@ -54,8 +54,8 @@ class Hook
     public function __construct(
         array $applicationConfig,
         Slim\Slim $app,
-        SlimBootstrap\Authentication $authentication,
-        array $aclConfig
+        SlimBootstrap\Authentication $authentication = null,
+        array $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_app               = $app;
