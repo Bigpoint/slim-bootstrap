@@ -173,7 +173,7 @@ It's possible to enable an authentication against an oauth server, to secure you
 
 ### How it works
 
-When authentication is enabled, you have to add the url parameter `token` to api calls with an access token given from your oauth server. The authentication logic validate this token aginst the configurated oauth server via its /me endpoint. Next the collected clientId from /me endpoint is going to be validated against requested endpoint and configurated acl. If all is fine, access is granted to requester. Otherwise request is aborted with an 401 or 403.
+When authentication is enabled, you have to add the url parameter `access_token` to api calls with an access token given from your oauth server. The authentication logic validate this access token aginst the configurated oauth server via its /me endpoint. Next the collected clientId from /me endpoint is going to be validated against requested endpoint and configurated acl. If all is fine, access is granted to requester. Otherwise request is aborted with an 401 or 403.
 
 ### Enable Authentication
 

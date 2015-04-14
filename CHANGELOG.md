@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.0
+ - feature: introduce "access_token" parameter to handle the access token. The "token" parameter is now deprecated and may be removed in some future version. Using the old "token" parameter will now throw a notice.
+
 ## 1.3.0
  - feature: it is now possible to create resource delete endpoints with the interface [\SlimBootstrap\Endpoint\ResourceDelete](src/SlimBootstrap/Endpoint/ResourceDelete.php)
  - feature: endpoints can now specify explicitly that they don't want authorization even if it is globally enabled. This can be done by passing a new optional parameter to the register endpoint functions.
