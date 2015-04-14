@@ -170,9 +170,20 @@ class Hook
 
                 $acl = new SlimBootstrap\Acl($this->_aclConfig);
 
-                $clientId = $this->_authentication->authenticate(
-                    $this->_app->request->get('token')
-                );
+                $accessToken = $this->_app->request->get('access_token');
+
+                if (null === $accessToken) {
+                    $accessToken = $this->_app->request->get('token');
+
+                    if (null !== $accessToken) {
+                        $this->_app->getLog()->notice(
+                            'please use "access_token" instead of "token" parameter, '
+                            . 'because "token" parameter is deprecated'
+                        );
+                    }
+                }
+
+                $clientId = $this->_authentication->authenticate($accessToken);
 
                 $this->_app->getLog()->info('authentication successfull');
 
