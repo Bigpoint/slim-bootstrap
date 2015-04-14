@@ -175,10 +175,12 @@ class Hook
                 if (null === $accessToken) {
                     $accessToken = $this->_app->request->get('token');
 
-                    $this->_app->getLog()->notice(
-                        'please use "access_token" instead of "token" parameter, '
-                        . 'because "token" parameter is deprecated'
-                    );
+                    if (null !== $accessToken) {
+                        $this->_app->getLog()->notice(
+                            'please use "access_token" instead of "token" parameter, '
+                            . 'because "token" parameter is deprecated'
+                        );
+                    }
                 }
 
                 $clientId = $this->_authentication->authenticate($accessToken);
