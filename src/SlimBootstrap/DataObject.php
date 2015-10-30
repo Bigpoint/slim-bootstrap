@@ -69,6 +69,16 @@ class DataObject
     }
 
     /**
+     * Updates the actual payload of this resource.
+     *
+     * @param array $data   payload
+     */
+    public function updateData(array $data)
+    {
+        $this->_data = $data;
+    }
+
+    /**
      * Returns the links for this HAL+JSON resource.
      *
      * @return array

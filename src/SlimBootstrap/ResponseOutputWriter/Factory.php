@@ -40,8 +40,9 @@ class Factory
      * @var array
      */
     private $_supportedMediaTypes = array(
-        'application/hal+json' => '_createJsonHal',
-        'application/json'     => '_createJson',
+        'application/hal+json'  => '_createJsonHal',
+        'application/json'      => '_createJson',
+        'text/csv'              => '_createCsv',
     );
 
     /**
@@ -135,6 +136,21 @@ class Factory
     private function _createJson()
     {
         return new SlimBootstrap\ResponseOutputWriter\Json(
+            $this->_request,
+            $this->_response,
+            $this->_headers,
+            $this->_shortName
+        );
+    }
+
+    /**
+     * This function creates a Csv reponse object.
+     *
+     * @return SlimBootstrap\ResponseOutputWriter\Csv
+     */
+    private function _createCsv()
+    {
+        return new SlimBootstrap\ResponseOutputWriter\Csv(
             $this->_request,
             $this->_response,
             $this->_headers,

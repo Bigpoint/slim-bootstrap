@@ -4,6 +4,10 @@ These classes provide a simple way to bootstrap a Slim application with authenti
 
 It is an abstraction of the [Slim Framework](http://slimframework.com/) and handles some stuff like output generation in different formats and authentication / acl handling.
 
+# Work in progress feature-branch!
+
+This branch is to develop the feature of a CSV response.
+
 ## installation
 
 ~~~

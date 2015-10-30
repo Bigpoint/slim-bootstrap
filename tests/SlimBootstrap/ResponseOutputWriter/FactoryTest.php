@@ -94,6 +94,14 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
                 'acceptHeader' => 'application/json;application/*',
                 'instance'     => '\SlimBootstrap\ResponseOutputWriter\Json',
             ),
+            array(
+                'acceptHeader' => 'text/csv',
+                'instance'     => '\SlimBootstrap\ResponseOutputWriter\Csv',
+            ),
+            array(
+                'acceptHeader' => 'text/csv,application/hal+json',
+                'instance'     => '\SlimBootstrap\ResponseOutputWriter\Csv',
+            ),
         );
     }
 
