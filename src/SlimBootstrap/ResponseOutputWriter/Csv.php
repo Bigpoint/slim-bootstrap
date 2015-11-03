@@ -3,6 +3,8 @@ namespace SlimBootstrap\ResponseOutputWriter;
 
 use \SlimBootstrap;
 use \Slim;
+use SlimBootstrap\CSVEncodingException;
+use SlimBootstrap\DataObject;
 
 /**
  * This class is responsible to output the data to the client in valid Csv
@@ -67,6 +69,8 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      *          "<parentKey><keyspaceDelimiter><childKey>"
      *      E.g.
      *          array("user" => array("name" => "foobar"))
+     *      with
+     *          $_keyspaceDelimiter = '_'
      *      would become
      *          "user_name"
      *
@@ -106,7 +110,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         $result = array();
 
         if (true === \is_array($data)) {
-            $this->_normalizeAll($data);
+            $data = $this->_normalizeAll($data);
             $identifiers = null;
             foreach ($data as $entry) {
                 $this->_buildStructure($entry, $entry->getIdentifiers(), 0, $result);
@@ -135,26 +139,35 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     /**
      * @param SlimBootstrap\DataObject $data  DataObject
      * @param array|null $keys
-     * @return array
+     * @return SlimBootstrap\DataObject
      */
-    private function _normalizeOne(SlimBootstrap\DataObject &$data, $keys = null){
+    private function _normalizeOne(DataObject $data, $keys = null){
         if(null === $keys){
-            $keys[] = \array_keys($data->getData());
+            $keys = \array_keys($data->getData());
         }
+
         $keys = \array_fill_keys($keys, null);
 
         if (\count(\array_intersect_key($keys, $data->getData())) !== \count($keys)){
-            $data->updateData(\array_merge($keys, $data->getData()));
+            return new DataObject(
+                $data->getIdentifiers(),
+                \array_merge($keys, $data->getData()),
+                $data->getLinks()
+            );
         } else {
-            return;
+            return $data;
         }
     }
 
     /**
      * @param SlimBootstrap\DataObject[] $data
-     * @throws SlimBootstrap\Exception
+     *
+     * @return SlimBootstrap\DataObject[]
+     *
+     * @throws SlimBootstrap\CSVEncodingException
      */
-    private function _normalizeAll(&$data){
+    private function _normalizeAll($data)
+    {
         $keys           = array();
         $identifierKeys    = null;
 
@@ -166,16 +179,24 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                     $identifierKeys !=
                     \array_keys($entry->getIdentifiers())
                 ){
-                    throw new SlimBootstrap\Exception("Different identifiers!");
+                    throw new CSVEncodingException("Different identifiers!");
                 }
             }
-            $entry->updateData($this->_flatten($entry->getData()));
+            $entry = new DataObject(
+                $entry->getIdentifiers(),
+                $this->_flatten($entry->getData()),
+                $entry->getLinks()
+            );
             $keys = \array_merge($keys, \array_keys($entry->getData()));
         }
 
+        $newData = array();
+
         foreach ($data as $key => $value) {
-            $this->_normalizeOne($value, $keys);
+            $newData[] = $this->_normalizeOne($value, $keys);
         }
+
+        return $newData;
     }
 
     /**
@@ -187,7 +208,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      * @param array $result      Reference of the result array to fill
      */
     private function _buildStructure(
-        SlimBootstrap\DataObject $data,
+        DataObject $data,
         array $identifiers,
         $index,
         array &$result
@@ -199,9 +220,16 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         $newIdentifiers = $this->_flatten($newIdentifiers);
 
         $tmp = \array_merge($newIdentifiers, $data->getData());
-        $result[] = $tmp;
+        if (null !==$tmp) {
+            $result[] = $tmp;
+        }
     }
 
+    /**
+     * @param array|SlimBootstrap\DataObject $origin
+     * @param string $namespace or null
+     * @return array
+     */
     private function _flatten($origin, $namespace = null) {
         $target = array();
 
@@ -212,8 +240,13 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                 $keyspace = $namespace . $this->_keyspaceDelimiter . $key;
             }
 
-            if($value instanceof SlimBootstrap\DataObject){
-                $target = \array_merge($target, $this->_flatten($value->getData(), $keyspace));
+            if($value instanceof DataObject){
+                $value = $this->_normalizeOne($value);
+                $target = \array_merge(
+                    $target,
+                    $this->_flatten($value->getIdentifiers(), $keyspace),
+                    $this->_flatten($value->getData(), $keyspace)
+                );
             } else if(true === \is_array($value)){
                 $target = \array_merge($target, $this->_flatten($value, $keyspace));
             } else {
@@ -229,23 +262,28 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      *                                  array($payload1, $payload2, ...);
      * @param   bool    $encloseAll Force enclosing every field (false)
      *
-     * @return  bool|string         Returns the CSV or false in case of an error.
+     * @return  string              Returns the CSV.
+     *
+     * @throws \SlimBootstrap\CSVEncodingException
      */
     protected function _csvEncode($data, $encloseAll = false)
     {
-        //TODO: implement this
-
-        if (false === \is_array($data)) {
-            return false;
+        if (false === \is_array($data)){
+            throw new CSVEncodingException("Expected array, " . \gettype($data) . " given.");
         }
 
         $returnCsv = array();
 
+        /*
+         * Get first array entry to fill headers. We do not know if the first
+         * $payload is an array as expected or another type.
+         */
         foreach ($data as $first) {
             if (false === \is_array($first)) {
                 continue;
             }
             $returnCsv[] = '# ' . \implode($this->_delimiter, \array_keys($first));
+
             break;
         }
 
@@ -257,7 +295,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         }
 
         if (0 == \count($returnCsv)) {
-            return false;
+            throw new CSVEncodingException("No content");
         }
 
         return \implode($this->_linebreak, $returnCsv);
@@ -268,7 +306,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      * @param   bool $encloseAll Force enclosing every field (false)
      * @return bool|string Returns the line for $fields or false in case of an error.
      *
-     * @throws SlimBootstrap\Exception
+     * @throws SlimBootstrap\CSVEncodingException
      * Adapted from:
      * @see http://php.net/manual/en/function.fputcsv.php#87120
      */
@@ -282,8 +320,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                 $output[] = $this->_null;
                 continue;
             } else if (true === \is_array($field)) {
-                // TODO: Add warning: "Payload not flattened!"
-                throw new SlimBootstrap\Exception("Payload not flattened!");
+                throw new CSVEncodingException("Malformed payload!");
                 continue;
             }
 
