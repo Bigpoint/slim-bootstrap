@@ -27,7 +27,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     private $_mockHeaders = null;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|CSV
+     * @var \PHPUnit_Framework_MockObject_MockObject
      */
     private $_csvTestOutputWriter = null;
 
@@ -56,9 +56,27 @@ class CsvTest extends \PHPUnit_Framework_TestCase
             )
         );
 
-        $this->_csvTestOutputWriter = $this->getMock(
+        $this->_csvTestOutputWriter = new Csv(
+            $this->_mockRequest,
+            $this->_mockResponse,
+            $this->_mockHeaders,
+            'mockShortName'
+        );
+    }
+
+    /**
+     * @dataProvider writeOneProvider
+     */
+    public function testWriteOne($data)
+    {
+        $localCsvTestOutputWriter = $this->getMock(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
-            array(),
+            array(
+                '_normalizeAll',
+                '_normalizeOne',
+                '_buildStructure',
+                '_csvEncode',
+            ),
             array(
                 $this->_mockRequest,
                 $this->_mockResponse,
@@ -66,50 +84,123 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 'mockShortName',
             )
         );
+        $localCsvTestOutputWriter
+            ->expects($this->once())
+            ->method('_normalizeOne')
+            ->will($this->returnValue($data));
+
+        $localCsvTestOutputWriter
+            ->expects($this->never())
+            ->method('_normalizeAll');
+
+        $localCsvTestOutputWriter
+            ->expects($this->once())
+            ->method('_buildStructure')
+            ->will($this->returnValue($data));
+
+        $this->_mockHeaders
+            ->expects($this->once())
+            ->method('set')
+            ->with(
+                $this->identicalTo("Content-Type"),
+                $this->identicalTo("text/csv; charset=UTF-8")
+            );
+
+        $this->_mockResponse
+            ->expects($this->once())
+            ->method('setStatus')
+            ->with($this->equalTo(200));
+
+
+        $localCsvTestOutputWriter
+            ->expects($this->once())
+            ->method('_csvEncode');
+
+        $this->_mockResponse
+            ->expects($this->once())
+            ->method('setBody');
+
+        $localCsvTestOutputWriter->write($data, 200);
+    }
+
+
+    /**
+     * @dataProvider normalizeAllDataProvider
+     */
+    public function testWriteArray($data)
+    {
+        $localCsvTestOutputWriter = $this->getMock(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            array(
+                '_normalizeAll',
+                '_normalizeOne',
+                '_buildStructure',
+                '_csvEncode',
+            ),
+            array(
+                $this->_mockRequest,
+                $this->_mockResponse,
+                $this->_mockHeaders,
+                'mockShortName',
+            )
+        );
+
+        $localCsvTestOutputWriter
+            ->expects($this->never())
+            ->method('_normalizeOne');
+
+        $localCsvTestOutputWriter
+            ->expects($this->once())
+            ->method('_normalizeAll')
+            ->will($this->returnValue($data));
+
+        $localCsvTestOutputWriter
+            ->expects($this->exactly(\count($data)))
+            ->method('_buildStructure')
+            ->will($this->returnValue($data));
+
+        $this->_mockHeaders
+            ->expects($this->once())
+            ->method('set')
+            ->with(
+                $this->identicalTo("Content-Type"),
+                $this->identicalTo("text/csv; charset=UTF-8")
+            );
+
+        $this->_mockResponse
+            ->expects($this->once())
+            ->method('setStatus')
+            ->with($this->equalTo(200));
+
+
+        $localCsvTestOutputWriter
+            ->expects($this->once())
+            ->method('_csvEncode');
+
+        $this->_mockResponse
+            ->expects($this->once())
+            ->method('setBody');
+
+        $localCsvTestOutputWriter->write($data, 200);
     }
 
     /**
-     * @codeCoverageIgnore
-     * @dataProvider writeProvider
+     * @expectedException \SlimBootstrap\CSVEncodingException
+     * @expectedExceptionMessage Expected DataObject, NULL given.
      */
-    public function testWrite($data)
+    public function testWriteUnencodable()
     {
-        //TODO: Write this test.
-
-        $this->_csvTestOutputWriter->write($data, 200);
-    }
-
-    /**
-     * @codeCoverageIgnore
-     * @dataProvider writeProvider
-     */
-    public function testWriteUnencodable($data)
-    {
-        //TODO: Write this test.
-
-        $this->_csvTestOutputWriter->write($data, 200);
+        $this->_csvTestOutputWriter->write(null, 200);
     }
 
     /**
      * @return array
      */
-    public function writeProvider()
+    public function writeOneProvider()
     {
-        return array(
+        return
             array(
-                'data' => new DataObject(
-                    array(
-                        'affiliateId' => 415,
-                        'gameId'      => 14,
-                    ),
-                    array()
-                ),
-            ),
-            array(
-                'data' => array(),
-            ),
-            array(
-                'data' => array(
+                array(
                     new DataObject(
                         array(
                             'affiliateId' => 415,
@@ -117,45 +208,11 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                         ),
                         array()
                     ),
-                    new DataObject(
-                        array(
-                            'affiliateId' => 415,
-                            'gameId'      => 14,
-                        ),
-                        array()
-                    ),
-                ),
-            ),
-            array(
-                'data' => array(
-                    new DataObject(
-                        array(
-                            'affiliateId' => 415,
-                            'gameId'      => 14,
-                        ),
-                        array()
-                    ),
-                    new DataObject(
-                        array(
-                            'id' => 9,
-                            'game_Id'      => 4,
-                        ),
-                        array()
-                    ),
-                ),
-            ),
-            array(
-                'data' => new DataObject(
                     array(),
-                    array(
-                        'welcome' => 'Welcome.',
-                    ),
-                    array()
+                    "",
                 ),
-            ),
-        );
+            );
     }
-
 
     /**
      * @return array
@@ -203,7 +260,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @dataProvider    csvDataProvider
      */
     public function testCsvEncode($data, $assertionEnclosed, $assertionEnclosedOnDemand){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_csvEncode');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_csvEncode'
+        );
         $method->setAccessible(true);
 
         $enclosed           = $method->invoke($this->_csvTestOutputWriter, $data, true);
@@ -239,7 +299,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @expectedException \SlimBootstrap\CSVEncodingException
      */
     public function testCsvEncodeFailure($data){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_csvEncode');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_csvEncode'
+        );
         $method->setAccessible(true);
 
         $method->invoke($this->_csvTestOutputWriter, $data);
@@ -318,7 +381,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @dataProvider    arrayFlattenDataProvider
      */
     public function test_flatten($data, $assertion){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_flatten');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_flatten'
+        );
         $method->setAccessible(true);
 
         $enclosed = $method->invoke($this->_csvTestOutputWriter, $data);
@@ -394,6 +460,38 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                     )
                 ),
             ),
+            array(
+                new DataObject(
+                    array(
+                        "foo" => "bar",
+                    ),
+                    array()
+                ),
+                null,
+                new DataObject(
+                    array(
+                        "foo" => "bar",
+                    ),
+                    array(
+                    )
+                ),
+            ),
+            array(
+                new DataObject(
+                    array(
+                        "foo" => "bar",
+                    ),
+                    array()
+                ),
+                array(),
+                new DataObject(
+                    array(
+                        "foo" => "bar",
+                    ),
+                    array(
+                    )
+                ),
+            ),
         );
     }
 
@@ -405,7 +503,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @dataProvider    normalizeOneDataProvider
      */
     public function test_normalizeOne($data, $keys, $assertion){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_normalizeOne');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_normalizeOne'
+        );
         $method->setAccessible(true);
 
         $enclosed = $method->invoke($this->_csvTestOutputWriter, $data, $keys);
@@ -457,6 +558,40 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                     ),
                 ),
             ),
+            array(
+                array(
+                    new DataObject(
+                        array(
+                            'affiliateId' => 1,
+                            'gameId'      => 1,
+                        ),
+                        array()
+                    ),
+                    new DataObject(
+                        array(
+                            'affiliateId' => 2,
+                            'gameId'      => 2,
+                        ),
+                        array()
+                    ),
+                ),
+                array(
+                    new DataObject(
+                        array(
+                            'affiliateId' => 1,
+                            'gameId'      => 1,
+                        ),
+                        array()
+                    ),
+                    new DataObject(
+                        array(
+                            'affiliateId' => 2,
+                            'gameId'      => 2,
+                        ),
+                        array()
+                    ),
+                ),
+            ),
         );
     }
 
@@ -467,7 +602,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @dataProvider    normalizeAllDataProvider
      */
     public function test_normalizeAll($data, $assertion){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_normalizeAll');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_normalizeAll'
+        );
         $method->setAccessible(true);
 
         $enclosed = $method->invoke($this->_csvTestOutputWriter, $data);
@@ -510,7 +648,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @expectedExceptionMessage Different identifiers!
      */
     public function test_normalizeAllFailure($data){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_normalizeAll');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_normalizeAll'
+        );
         $method->setAccessible(true);
 
         $method->invoke($this->_csvTestOutputWriter, $data);
@@ -539,7 +680,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @expectedExceptionMessage Malformed payload!
      */
     public function test_dataSetToLineMalformedPayload($data){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_dataSetToLine');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_dataSetToLine'
+        );
         $method->setAccessible(true);
 
         $method->invoke($this->_csvTestOutputWriter, $data);
@@ -575,7 +719,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @dataProvider    buildStructureDataProvider
      */
     public function test_buildStructure(DataObject $data, $expected){
-        $method = new \ReflectionMethod('\SlimBootstrap\ResponseOutputWriter\Csv', '_buildStructure');
+        $method = new \ReflectionMethod(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            '_buildStructure'
+        );
         $method->setAccessible(true);
 
         $result = array();

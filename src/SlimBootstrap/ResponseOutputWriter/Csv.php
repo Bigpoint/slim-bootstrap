@@ -100,10 +100,11 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      * This function outputs the given $data as valid CSV to the client
      * and sets the HTTP Response Code to the given $statusCode.
      *
-     * @param SlimBootstrap\DataObject[] $data       The data to output to
+     * @param SlimBootstrap\DataObject[] $data The data to output to
      *                                                   the client
-     * @param int                            $statusCode The status code to set
+     * @param int $statusCode The status code to set
      *                                                   in the response
+     * @throws CSVEncodingException
      */
     public function write($data, $statusCode = 200)
     {
@@ -113,19 +114,33 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             $data = $this->_normalizeAll($data);
             $identifiers = null;
             foreach ($data as $entry) {
-                $this->_buildStructure($entry, $entry->getIdentifiers(), 0, $result);
+                $this->_buildStructure(
+                    $entry,
+                    $entry->getIdentifiers(),
+                    0,
+                    $result
+                );
             }
+        } else if ($data instanceof DataObject) {
+            $this->_buildStructure(
+                $this->_normalizeOne($data),
+                $data->getIdentifiers(),
+                0,
+                $result
+            );
         } else {
-            $this->_buildStructure($this->_normalizeOne($data), $data->getIdentifiers(), 0, $result);
+            throw new CSVEncodingException(
+                "Expected DataObject, " . \gettype($data) . " given."
+            );
         }
 
         $body = $this->_csvEncode($result);
 
-        if (false === $body) {
-            $this->_response->setStatus(500);
-            $this->_response->setBody("Error encoding requested data.");
-            return;
-        }
+//        if (false === $body) {
+//            $this->_response->setStatus(500);
+//            $this->_response->setBody("Error encoding requested data.");
+//            return;
+//        }
 
         $this->_headers->set(
             'Content-Type',
@@ -137,18 +152,29 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
-     * @param SlimBootstrap\DataObject $data  DataObject
-     * @param array|null $keys
-     * @return SlimBootstrap\DataObject
+     * This function adds keys to the DataObject that are necessary
+     * to form uniform data. Nonexistent keys will be filled with null.
+     *
+     * @param SlimBootstrap\DataObject  $data   DataObject to modify
+     * @param array|null                $keys   Array of keys that need
+     *                                          to exist.
+     * @return SlimBootstrap\DataObject         DataObject w/ filled Keys
      */
-    private function _normalizeOne(DataObject $data, $keys = null){
+    protected function _normalizeOne(DataObject $data, $keys = null){
         if(null === $keys){
             $keys = \array_keys($data->getData());
         }
 
         $keys = \array_fill_keys($keys, null);
 
-        if (\count(\array_intersect_key($keys, $data->getData())) !== \count($keys)){
+        if (\count(
+                \array_intersect_key(
+                    $keys,
+                    $data->getData()
+                )
+            )
+            !== \count($keys)
+        ){
             return new DataObject(
                 $data->getIdentifiers(),
                 \array_merge($keys, $data->getData()),
@@ -160,13 +186,17 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
-     * @param SlimBootstrap\DataObject[] $data
+     * This function ensures that in all given DataObjects the
+     * same keys exist. Nonexistent keys in a DataObject are
+     * filled with null.
      *
-     * @return SlimBootstrap\DataObject[]
+     * @param SlimBootstrap\DataObject[]    $data   DataObjects to normalize
+     *
+     * @return SlimBootstrap\DataObject[]   Normalized DataObjects
      *
      * @throws SlimBootstrap\CSVEncodingException
      */
-    private function _normalizeAll($data)
+    protected function _normalizeAll($data)
     {
         $keys           = array();
         $identifierKeys    = null;
@@ -204,10 +234,11 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      *
      * @param SlimBootstrap\DataObject $data     The payload of a DataObject
      * @param array $identifiers The identifiers to build the array structure
-     * @param int   $index       The index of the current element in the identifiers array
+     * @param int   $index       The index of the current element in the
+     *                              identifiers array
      * @param array $result      Reference of the result array to fill
      */
-    private function _buildStructure(
+    protected function _buildStructure(
         DataObject $data,
         array $identifiers,
         $index,
@@ -226,9 +257,13 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
-     * @param array|SlimBootstrap\DataObject $origin
-     * @param string $namespace or null
-     * @return array
+     * This function flattens an array or DataObject.
+     *
+     * @param   array|SlimBootstrap\DataObject  $origin
+     *                                              Array/DataObject to flatten
+     * @param   string                          $namespace
+     *                                              or null (used for recursion)
+     * @return  array   Flattened payload
      */
     private function _flatten($origin, $namespace = null) {
         $target = array();
@@ -248,7 +283,10 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                     $this->_flatten($value->getData(), $keyspace)
                 );
             } else if(true === \is_array($value)){
-                $target = \array_merge($target, $this->_flatten($value, $keyspace));
+                $target = \array_merge(
+                    $target,
+                    $this->_flatten($value, $keyspace)
+                );
             } else {
                 $target[$keyspace] = $value;
             }
@@ -269,7 +307,9 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     protected function _csvEncode($data, $encloseAll = false)
     {
         if (false === \is_array($data)){
-            throw new CSVEncodingException("Expected array, " . \gettype($data) . " given.");
+            throw new CSVEncodingException(
+                "Expected array, " . \gettype($data) . " given."
+            );
         }
 
         $returnCsv = array();
@@ -282,7 +322,10 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if (false === \is_array($first)) {
                 continue;
             }
-            $returnCsv[] = '# ' . \implode($this->_delimiter, \array_keys($first));
+            $returnCsv[] = '# ' . \implode(
+                    $this->_delimiter,
+                    \array_keys($first)
+                );
 
             break;
         }
@@ -304,7 +347,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     /**
      * @param   array $fields Structured 2+-dimensional-data array
      * @param   bool $encloseAll Force enclosing every field (false)
-     * @return bool|string Returns the line for $fields or false in case of an error.
+     * @return  string  Returns the line for $fields.
      *
      * @throws SlimBootstrap\CSVEncodingException
      * Adapted from:
@@ -324,7 +367,16 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                 continue;
             }
 
-            if ($encloseAll || \preg_match("/(\\s|" . $delimiter_esc . '|' . $enclosure_esc. ')/', $field)) {
+            if ($encloseAll
+                || \preg_match(
+                    "/(\\s|"
+                    . $delimiter_esc
+                    . '|'
+                    . $enclosure_esc
+                    . ')/',
+                    $field
+                )
+            ) {
                 $output[] = $this->_enclosure
                             . \str_replace(
                                 $this->_enclosure,
