@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0
+ - feature: it is now possible to generate a CSV-Response ([RFC 4180](https://tools.ietf.org/html/rfc4180) compliant) by setting the `Accept`-header to `text/csv`.
+    The properties of the CSV are the following:
+     - `Header` according to the structure in the given DataObject
+     - `Delimiter` = `,`
+     - `Enclosure` = `"`
+     - `Line ending` = `\r\n` / `CLRF`
+
 ## 1.4.0
  - feature: introduce "access_token" parameter to handle the access token. The "token" parameter is now deprecated and may be removed in some future version. Using the old "token" parameter will now throw a notice.
 

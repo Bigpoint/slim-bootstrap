@@ -228,25 +228,25 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                         "foo"   => "bar",
                     )
                 ),
-                "# useme,foo\r\n"
+                "useme,foo\r\n"
                 . "\"and abuse me\",\"bar\"",
-                "# useme,foo\r\n"
+                "useme,foo\r\n"
                 . "\"and abuse me\",bar",
             ),
             array(
                 array(
                     array("nullkey" => null)
                 ),
-                "# nullkey\r\nNULL",
-                "# nullkey\r\nNULL",
+                "nullkey\r\nNULL",
+                "nullkey\r\nNULL",
             ),
             array(
                 array(
                     array("linebreaktest" => "linebreak\ntest")
                 ),
-                "# linebreaktest\r\n"
+                "linebreaktest\r\n"
                 . "\"linebreak\ntest\"",
-                "# linebreaktest\r\n"
+                "linebreaktest\r\n"
                 . "\"linebreak\ntest\"",
             ),
         );

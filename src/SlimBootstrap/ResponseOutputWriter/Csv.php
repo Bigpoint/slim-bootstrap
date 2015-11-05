@@ -322,7 +322,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if (false === \is_array($first)) {
                 continue;
             }
-            $returnCsv[] = '# ' . \implode(
+            $returnCsv[] = \implode(
                     $this->_delimiter,
                     \array_keys($first)
                 );
