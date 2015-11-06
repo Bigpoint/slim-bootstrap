@@ -180,6 +180,7 @@ Slim-Bootstrap supports multiple response output types, which can be requested v
 
 The properties of the CSV are configurable in the 'csv' section of the `application.json`. If not existent the following defaults will be used:
 
+| Configvalue           | Default  | Description                                                      |
 | --------------------- | -------- | ---------------------------------------------------------------- |
 | `delimiter`           | `","`    | Field delimiter                                                  |
 | `enclosure`           | `"\""`   | Field Enclosure                                                  |
