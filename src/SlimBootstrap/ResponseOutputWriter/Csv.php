@@ -121,13 +121,13 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if (true === \array_key_exists('linebreak', $CSVConfig)
                 && false === empty($CSVConfig['linebreak'])
             ) {
-                $this->_enclosure = $CSVConfig['linebreak'];
+                $this->_linebreak = $CSVConfig['linebreak'];
             }
 
             if (true === \array_key_exists('keyspaceDelimiter', $CSVConfig)
                 && false === empty($CSVConfig['keyspaceDelimiter'])
             ) {
-                $this->_enclosure = $CSVConfig['keyspaceDelimiter'];
+                $this->_keyspaceDelimiter = $CSVConfig['keyspaceDelimiter'];
             }
 
             if (true === \array_key_exists('encloseAll', $CSVConfig)
