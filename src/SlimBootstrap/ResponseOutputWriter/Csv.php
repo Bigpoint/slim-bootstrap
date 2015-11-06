@@ -290,7 +290,8 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     {
         $newIdentifiers = array();
         foreach ($identifiers as $key =>$value) {
-            $newIdentifiers['identifier_' . $key] = $value;
+            $newIdentifiers['identifier' . $this->_keyspaceDelimiter . $key]
+                = $value;
         }
         $newIdentifiers = $this->_flatten($newIdentifiers);
 
