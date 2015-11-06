@@ -43,6 +43,13 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     private $_delimiter = ',';
 
     /**
+     * Enclose all fields or use opportunistic enclosures
+     *
+     * @var bool
+     */
+    private $_encloseAll = false;
+
+    /**
      * CSV Enclosure
      *
      * @var string
@@ -80,20 +87,61 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     private $_keyspaceDelimiter  = '_';
 
     /**
-     * @param Slim\Http\Request  $request  The Slim request object.
-     * @param Slim\Http\Response $response The Slim response object.
-     * @param Slim\Http\Headers  $headers  The Slim response headers object.
+     * @param Slim\Http\Request  $request   The Slim request object.
+     * @param Slim\Http\Response $response  The Slim response object.
+     * @param Slim\Http\Headers  $headers   The Slim response headers object.
      * @param String             $shortName
+     * @param array              $CSVConfig optional CSV Configuration
+     * @codeCoverageIgnore
      */
     public function __construct(
         Slim\Http\Request $request,
         Slim\Http\Response $response,
         Slim\Http\Headers $headers,
-        $shortName
-    ) {
+        $shortName,
+        array $CSVConfig = null
+    )
+    {
         $this->_request  = $request;
         $this->_response = $response;
         $this->_headers  = $headers;
+        if (true === \is_array($CSVConfig)) {
+            if (true === \array_key_exists('delimiter', $CSVConfig)
+                && false === empty($CSVConfig['delimiter'])
+            ) {
+                $this->_delimiter = $CSVConfig['delimiter'];
+            }
+
+            if (true === \array_key_exists('enclosure', $CSVConfig)
+                && false === empty($CSVConfig['enclosure'])
+            ) {
+                $this->_enclosure = $CSVConfig['enclosure'];
+            }
+
+            if (true === \array_key_exists('linebreak', $CSVConfig)
+                && false === empty($CSVConfig['linebreak'])
+            ) {
+                $this->_enclosure = $CSVConfig['linebreak'];
+            }
+
+            if (true === \array_key_exists('keyspaceDelimiter', $CSVConfig)
+                && false === empty($CSVConfig['keyspaceDelimiter'])
+            ) {
+                $this->_enclosure = $CSVConfig['keyspaceDelimiter'];
+            }
+
+            if (true === \array_key_exists('encloseAll', $CSVConfig)
+                && false === empty($CSVConfig['encloseAll'])
+            ) {
+                $this->_encloseAll = $CSVConfig['encloseAll'];
+            }
+
+            if (true === \array_key_exists('null', $CSVConfig)
+                && false === empty($CSVConfig['null'])
+            ) {
+                $this->_null = $CSVConfig['null'];
+            }
+        }
     }
 
     /**
@@ -134,13 +182,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             );
         }
 
-        $body = $this->_csvEncode($result);
-
-//        if (false === $body) {
-//            $this->_response->setStatus(500);
-//            $this->_response->setBody("Error encoding requested data.");
-//            return;
-//        }
+        $body = $this->_csvEncode($result, $this->_encloseAll);
 
         $this->_headers->set(
             'Content-Type',
@@ -160,21 +202,22 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      *                                          to exist.
      * @return SlimBootstrap\DataObject         DataObject w/ filled Keys
      */
-    protected function _normalizeOne(DataObject $data, $keys = null){
-        if(null === $keys){
+    protected function _normalizeOne(DataObject $data, $keys = null)
+    {
+        if (null === $keys) {
             $keys = \array_keys($data->getData());
         }
 
         $keys = \array_fill_keys($keys, null);
 
-        if (\count(
-                \array_intersect_key(
-                    $keys,
-                    $data->getData()
-                )
+        $countWantedKeys = \count(
+            \array_intersect_key(
+                $keys,
+                $data->getData()
             )
-            !== \count($keys)
-        ){
+        );
+
+        if ($countWantedKeys !== \count($keys)) {
             return new DataObject(
                 $data->getIdentifiers(),
                 \array_merge($keys, $data->getData()),
@@ -202,13 +245,13 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         $identifierKeys    = null;
 
         foreach ($data as &$entry) {
-            if(null === $identifierKeys){
+            if (null === $identifierKeys) {
                 $identifierKeys = \array_keys($entry->getIdentifiers());
             } else {
-                if(
+                if (
                     $identifierKeys !=
                     \array_keys($entry->getIdentifiers())
-                ){
+                ) {
                     throw new CSVEncodingException("Different identifiers!");
                 }
             }
@@ -243,9 +286,10 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         array $identifiers,
         $index,
         array &$result
-    ) {
+    )
+    {
         $newIdentifiers = array();
-        foreach($identifiers as $key =>$value){
+        foreach ($identifiers as $key =>$value) {
             $newIdentifiers['identifier_' . $key] = $value;
         }
         $newIdentifiers = $this->_flatten($newIdentifiers);
@@ -265,24 +309,25 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      *                                              or null (used for recursion)
      * @return  array   Flattened payload
      */
-    private function _flatten($origin, $namespace = null) {
+    private function _flatten($origin, $namespace = null)
+    {
         $target = array();
 
-        foreach($origin as $key => $value){
-            if(null === $namespace){
+        foreach ($origin as $key => $value) {
+            if (null === $namespace) {
                 $keyspace = $key;
             } else {
                 $keyspace = $namespace . $this->_keyspaceDelimiter . $key;
             }
 
-            if($value instanceof DataObject){
+            if ($value instanceof DataObject) {
                 $value = $this->_normalizeOne($value);
                 $target = \array_merge(
                     $target,
                     $this->_flatten($value->getIdentifiers(), $keyspace),
                     $this->_flatten($value->getData(), $keyspace)
                 );
-            } else if(true === \is_array($value)){
+            } else if (true === \is_array($value)) {
                 $target = \array_merge(
                     $target,
                     $this->_flatten($value, $keyspace)
@@ -306,7 +351,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      */
     protected function _csvEncode($data, $encloseAll = false)
     {
-        if (false === \is_array($data)){
+        if (false === \is_array($data)) {
             throw new CSVEncodingException(
                 "Expected array, " . \gettype($data) . " given."
             );
@@ -323,9 +368,9 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                 continue;
             }
             $returnCsv[] = \implode(
-                    $this->_delimiter,
-                    \array_keys($first)
-                );
+                $this->_delimiter,
+                \array_keys($first)
+            );
 
             break;
         }
@@ -353,9 +398,10 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      * Adapted from:
      * @see http://php.net/manual/en/function.fputcsv.php#87120
      */
-    private function _dataSetToLine(array $fields, $encloseAll = false) {
-        $delimiter_esc = \preg_quote($this->_delimiter, '/');
-        $enclosure_esc = \preg_quote($this->_enclosure, '/');
+    private function _dataSetToLine(array $fields, $encloseAll = false)
+    {
+        $delimiterEscaped = \preg_quote($this->_delimiter, '/');
+        $enclosureEscaped = \preg_quote($this->_enclosure, '/');
 
         $output = array();
         foreach ($fields as $field) {
@@ -370,9 +416,9 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if ($encloseAll
                 || \preg_match(
                     "/(\\s|"
-                    . $delimiter_esc
+                    . $delimiterEscaped
                     . '|'
-                    . $enclosure_esc
+                    . $enclosureEscaped
                     . ')/',
                     $field
                 )

@@ -100,12 +100,20 @@ class Bootstrap
             )
         );
 
+        $csvConfig = array();
+        if (true === \array_key_exists('csv', $this->_applicationConfig)
+            && true === \is_array($this->_applicationConfig['csv'])
+        ) {
+            $csvConfig = $this->_applicationConfig['csv'];
+        }
+
         // create hook handler
         $this->_hook = new SlimBootstrap\Hook(
             $this->_applicationConfig,
             $this->_app,
             $this->_authentication,
-            $this->_aclConfig
+            $this->_aclConfig,
+            $csvConfig
         );
 
         // define hooks

@@ -12,22 +12,22 @@ use \SlimBootstrap\DataObject;
 class CsvTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \PHPUnit_Framework_MockObject_MockObject|\Slim\Http\Request
      */
     private $_mockRequest = null;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \PHPUnit_Framework_MockObject_MockObject|\Slim\Http\Response
      */
     private $_mockResponse = null;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \PHPUnit_Framework_MockObject_MockObject|\Slim\Http\Headers
      */
     private $_mockHeaders = null;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var CSV
      */
     private $_csvTestOutputWriter = null;
 
@@ -254,20 +254,35 @@ class CsvTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @param array     $data                         Data to test with
-     * @param string    $assertionEnclosed            Expected result w/ forced enclosure
-     * @param string    $assertionEnclosedOnDemand    Expected result w/o forced enclosure
+     * @param string    $assertionEnclosed            Expected result w/ forced
+     *                                                  enclosure
+     * @param string    $assertionEnclosedOnDemand    Expected result w/o forced
+     *                                                  enclosure
      *
      * @dataProvider    csvDataProvider
      */
-    public function testCsvEncode($data, $assertionEnclosed, $assertionEnclosedOnDemand){
+    public function testCsvEncode(
+        $data,
+        $assertionEnclosed,
+        $assertionEnclosedOnDemand
+    )
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_csvEncode'
         );
         $method->setAccessible(true);
 
-        $enclosed           = $method->invoke($this->_csvTestOutputWriter, $data, true);
-        $enclosedOnDemand   = $method->invoke($this->_csvTestOutputWriter, $data, false);
+        $enclosed           = $method->invoke(
+            $this->_csvTestOutputWriter,
+            $data,
+            true
+        );
+        $enclosedOnDemand   = $method->invoke(
+            $this->_csvTestOutputWriter,
+            $data,
+            false
+        );
         $this->assertEquals($assertionEnclosed, $enclosed);
         $this->assertEquals($assertionEnclosedOnDemand, $enclosedOnDemand);
     }
@@ -298,7 +313,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @dataProvider    csvFailureDataProvider
      * @expectedException \SlimBootstrap\CSVEncodingException
      */
-    public function testCsvEncodeFailure($data){
+    public function testCsvEncodeFailure($data)
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_csvEncode'
@@ -311,7 +327,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    public function arrayFlattenDataProvider(){
+    public function arrayFlattenDataProvider()
+    {
         return array(
             array(
                 array(
@@ -380,7 +397,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider    arrayFlattenDataProvider
      */
-    public function test_flatten($data, $assertion){
+    public function test_flatten($data, $assertion)
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_flatten'
@@ -395,7 +413,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    public function normalizeOneDataProvider(){
+    public function normalizeOneDataProvider()
+    {
         return array(
             array(
                 new DataObject(
@@ -502,7 +521,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider    normalizeOneDataProvider
      */
-    public function test_normalizeOne($data, $keys, $assertion){
+    public function test_normalizeOne($data, $keys, $assertion)
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_normalizeOne'
@@ -516,7 +536,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    public function normalizeAllDataProvider(){
+    public function normalizeAllDataProvider()
+    {
         return array(
             array(
                 array(
@@ -601,7 +622,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider    normalizeAllDataProvider
      */
-    public function test_normalizeAll($data, $assertion){
+    public function test_normalizeAll($data, $assertion)
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_normalizeAll'
@@ -615,7 +637,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    public function normalizeAllFailureDataProvider(){
+    public function normalizeAllFailureDataProvider()
+    {
         return array(
             array(
                 array(
@@ -647,7 +670,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @expectedException \SlimBootstrap\CSVEncodingException
      * @expectedExceptionMessage Different identifiers!
      */
-    public function test_normalizeAllFailure($data){
+    public function test_normalizeAllFailure($data)
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_normalizeAll'
@@ -660,7 +684,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    public function dataSetToLineMalformedPayloadDataProvider(){
+    public function dataSetToLineMalformedPayloadDataProvider()
+    {
         return array(
             array(
                 array(
@@ -679,7 +704,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @expectedException \SlimBootstrap\CSVEncodingException
      * @expectedExceptionMessage Malformed payload!
      */
-    public function test_dataSetToLineMalformedPayload($data){
+    public function test_dataSetToLineMalformedPayload($data)
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_dataSetToLine'
@@ -691,7 +717,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    public function buildStructureDataProvider(){
+    public function buildStructureDataProvider()
+    {
         return array(
             array(
                 new DataObject(
@@ -718,7 +745,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      *
      * @dataProvider    buildStructureDataProvider
      */
-    public function test_buildStructure(DataObject $data, $expected){
+    public function test_buildStructure(DataObject $data, $expected)
+    {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_buildStructure'

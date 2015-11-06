@@ -49,6 +49,14 @@ The following structure has to be present:
         "shortName": "###NAMESPACE_LOWER###",
         "cacheDuration": 900,
         "debug": false,
+        "csv": {
+            "delimiter": ",",
+            "enclosure": "\"",
+            "linebreak": "\r\n",
+            "keyspaceDelimiter": "_",
+            "encloseAll": false,
+            "null": "NULL"
+        },
         "monolog": {
             "handler": {
                 "udp": {
@@ -167,6 +175,19 @@ Slim-Bootstrap supports multiple response output types, which can be requested v
 - [application/hal+json](http://stateless.co/hal_specification.html) __(default)__
 - application/json
 - [text/csv](https://tools.ietf.org/html/rfc4180)
+
+### Regarding `text/csv` Output
+
+The properties of the CSV are configurable in the 'csv' section of the `application.json`. If not existent the following defaults will be used:
+
+| --------------------- | -------- | ---------------------------------------------------------------- |
+| `delimiter`           | `","`    | Field delimiter                                                  |
+| `enclosure`           | `"\""`   | Field Enclosure                                                  |
+| `linebreak`           | `"\r\n"` | Linebreak                                                        |
+| `keyspaceDelimiter`   | `"_"`    | Used to delimit merged structure-keys                            |
+| `encloseAll`          | `false`  | Enclose every field (true) or only where it is necessary (false) |
+| `null`                | `"NULL"` | Replace a null value in the dataset with this string.            |
+
 
 ## Authentication
 

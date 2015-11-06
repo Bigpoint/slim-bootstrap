@@ -32,6 +32,11 @@ class Hook
     private $_aclConfig = null;
 
     /**
+     * @var array
+     */
+    private $_csvConfig = null;
+
+    /**
      * @var SlimBootstrap\ResponseOutputWriter
      */
     private $_responseOutputWriter = null;
@@ -50,17 +55,20 @@ class Hook
      * @param Slim\Slim                    $app
      * @param SlimBootstrap\Authentication $authentication
      * @param array                        $aclConfig
+     * @param array                        $csvConfig
      */
     public function __construct(
         array $applicationConfig,
         Slim\Slim $app,
         SlimBootstrap\Authentication $authentication = null,
-        array $aclConfig = null
+        array $aclConfig = null,
+        array $csvConfig = array()
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_app               = $app;
         $this->_authentication    = $authentication;
         $this->_aclConfig         = $aclConfig;
+        $this->_csvConfig         = $csvConfig;
     }
 
     /**
@@ -127,7 +135,8 @@ class Hook
                     $this->_app->request,
                     $this->_app->response,
                     $this->_app->response->headers,
-                    $this->_applicationConfig['shortName']
+                    $this->_applicationConfig['shortName'],
+                    $this->_csvConfig
                 );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
@@ -153,7 +162,10 @@ class Hook
                     'REQUEST_METHOD'
                 ) . $currentRoute->getPattern();
 
-                if (true === array_key_exists($routeId, $this->_endpointAuthentication)
+                if (true === array_key_exists(
+                        $routeId,
+                        $this->_endpointAuthentication
+                    )
                     && false === $this->_endpointAuthentication[$routeId]
                 ) {
                     return;
