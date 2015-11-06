@@ -11,5 +11,17 @@ use \Slim;
  */
 class CSVEncodingException extends Exception
 {
+    /**
+     * @param string $message
+     * @param int    $code
+     * @param int    $logLevel
+     */
+    public function __construct(
+        $message = '',
+        $code = 500,
+        $logLevel = Slim\Log::CRITICAL
+    ) {
+        parent::__construct($message, $code, $logLevel);
+    }
 
 }
