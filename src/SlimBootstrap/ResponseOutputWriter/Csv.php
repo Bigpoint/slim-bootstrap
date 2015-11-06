@@ -242,9 +242,11 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     protected function _normalizeAll($data)
     {
         $keys           = array();
-        $identifierKeys    = null;
+        $identifierKeys = null;
+        $newData        = array();
+        $returnData     = array();
 
-        foreach ($data as &$entry) {
+        foreach ($data as $entry) {
             if (null === $identifierKeys) {
                 $identifierKeys = \array_keys($entry->getIdentifiers());
             } else {
@@ -255,7 +257,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                     throw new CSVEncodingException("Different identifiers!");
                 }
             }
-            $entry = new DataObject(
+            $newData[] = new DataObject(
                 $entry->getIdentifiers(),
                 $this->_flatten($entry->getData()),
                 $entry->getLinks()
@@ -263,13 +265,11 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             $keys = \array_merge($keys, \array_keys($entry->getData()));
         }
 
-        $newData = array();
-
-        foreach ($data as $key => $value) {
-            $newData[] = $this->_normalizeOne($value, $keys);
+        foreach ($newData as $key => $value) {
+            $returnData[] = $this->_normalizeOne($value, $keys);
         }
 
-        return $newData;
+        return $returnData;
     }
 
     /**
