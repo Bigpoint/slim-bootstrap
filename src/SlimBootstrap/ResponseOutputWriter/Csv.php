@@ -100,8 +100,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         Slim\Http\Headers $headers,
         $shortName,
         array $CSVConfig = null
-    )
-    {
+    ) {
         $this->_request  = $request;
         $this->_response = $response;
         $this->_headers  = $headers;
@@ -286,17 +285,16 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         array $identifiers,
         $index,
         array &$result
-    )
-    {
+    ) {
         $newIdentifiers = array();
-        foreach ($identifiers as $key =>$value) {
+        foreach ($identifiers as $key => $value) {
             $newIdentifiers['identifier' . $this->_keyspaceDelimiter . $key]
                 = $value;
         }
         $newIdentifiers = $this->_flatten($newIdentifiers);
 
         $tmp = \array_merge($newIdentifiers, $data->getData());
-        if (null !==$tmp) {
+        if (null !== $tmp) {
             $result[] = $tmp;
         }
     }
@@ -380,7 +378,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if (false === \is_array($entry)) {
                 continue;
             }
-            $returnCsv[] = $this->_dataSetToLine($entry, $encloseAll);
+            $returnCsv[] = $this->_buildCsvLineFromDataSet($entry, $encloseAll);
         }
 
         if (0 == \count($returnCsv)) {
@@ -399,8 +397,10 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      * Adapted from:
      * @see http://php.net/manual/en/function.fputcsv.php#87120
      */
-    private function _dataSetToLine(array $fields, $encloseAll = false)
-    {
+    private function _buildCsvLineFromDataSet(
+        array $fields,
+        $encloseAll = false
+    ) {
         $delimiterEscaped = \preg_quote($this->_delimiter, '/');
         $enclosureEscaped = \preg_quote($this->_enclosure, '/');
 

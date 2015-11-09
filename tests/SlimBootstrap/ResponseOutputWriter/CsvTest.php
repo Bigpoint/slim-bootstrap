@@ -704,11 +704,11 @@ class CsvTest extends \PHPUnit_Framework_TestCase
      * @expectedException \SlimBootstrap\CSVEncodingException
      * @expectedExceptionMessage Malformed payload!
      */
-    public function test_dataSetToLineMalformedPayload($data)
+    public function test_buildCsvLineFromDataSetMalformedPayload($data)
     {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_dataSetToLine'
+            '_buildCsvLineFromDataSet'
         );
         $method->setAccessible(true);
 
