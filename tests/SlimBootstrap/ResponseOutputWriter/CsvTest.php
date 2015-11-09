@@ -226,7 +226,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                     array(
                         "useme" => "and abuse me",
                         "foo"   => "bar",
-                    )
+                    ),
                 ),
                 "useme,foo\r\n"
                 . "\"and abuse me\",\"bar\"",
@@ -235,14 +235,14 @@ class CsvTest extends \PHPUnit_Framework_TestCase
             ),
             array(
                 array(
-                    array("nullkey" => null)
+                    array("nullkey" => null),
                 ),
                 "nullkey\r\nNULL",
                 "nullkey\r\nNULL",
             ),
             array(
                 array(
-                    array("linebreaktest" => "linebreak\ntest")
+                    array("linebreaktest" => "linebreak\ntest"),
                 ),
                 "linebreaktest\r\n"
                 . "\"linebreak\ntest\"",
@@ -265,8 +265,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $data,
         $assertionEnclosed,
         $assertionEnclosedOnDemand
-    )
-    {
+    ) {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_csvEncode'
@@ -332,7 +331,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 array(
-                    "key"=> "value",
+                    "key" => "value",
                     "foo" => array(
                         "test" => "test1234",
                         "bar" => "foobar",
@@ -347,7 +346,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                     "foo_bar" => "foobar",
                     "foo_foo2_test" => "test1234",
                     "foo_foo2_bar" => "foobar",
-                    "key" => "value"
+                    "key" => "value",
                 ),
             ),
             array(
@@ -358,7 +357,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                             "test" => "test1234",
                             "bar" => "foobar",
                         )
-                    )
+                    ),
                 ),
                 array(
                     "someDataObject_test" => "test1234",
@@ -373,14 +372,14 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                             "test" => "test1234",
                             "anotherDO" => new DataObject(
                                 array(
-                                    "dummyId" => 1
+                                    "dummyId" => 1,
                                 ),
                                 array(
                                     "foo" => "bar",
                                 )
-                            )
+                            ),
                         )
-                    )
+                    ),
                 ),
                 array(
                     "someDataObject_test" => "test1234",
@@ -419,10 +418,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
             array(
                 new DataObject(
                     array(
-                        "id" => "dummy"
+                        "id" => "dummy",
                     ),
                     array(
-                        "foo" => "bar"
+                        "foo" => "bar",
                     )
                 ),
                 array(
@@ -690,7 +689,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
             array(
                 array(
                     array(
-                        "Malformed" => "payload!"
+                        "Malformed" => "payload!",
                     ),
                 ),
             ),
@@ -733,8 +732,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                     array(
                         "identifier_id" => "dummy",
                         "foo" => "bar",
-                    )
-                )
+                    ),
+                ),
             ),
         );
     }
@@ -758,7 +757,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
             $data,
             $data->getIdentifiers(),
             0,
-            &$result
+            &$result,
         );
         $method->invokeArgs($this->_csvTestOutputWriter, $arguments);
         $this->assertEquals($expected, $result);
