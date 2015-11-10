@@ -217,14 +217,10 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         );
 
         if ($countWantedKeys !== \count($keys)) {
-            return new DataObject(
-                $data->getIdentifiers(),
-                \array_merge($keys, $data->getData()),
-                $data->getLinks()
-            );
-        } else {
-            return $data;
+            $data->setData(\array_merge($keys, $data->getData()));
         }
+
+        return $data;
     }
 
     /**
@@ -256,12 +252,11 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                     throw new CSVEncodingException("Different identifiers!");
                 }
             }
-            $newData[] = new DataObject(
-                $entry->getIdentifiers(),
-                $this->_flatten($entry->getData()),
-                $entry->getLinks()
-            );
+
             $keys = \array_merge($keys, \array_keys($entry->getData()));
+            $entry->setData($this->_flatten($entry->getData()));
+
+            $newData[] = $entry;
         }
 
         foreach ($newData as $key => $value) {
