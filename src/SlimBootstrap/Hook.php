@@ -121,6 +121,13 @@ class Hook
     public function outputWriter()
     {
         try {
+            $csvConfig = array();
+            if (true === \array_key_exists('csv', $this->_applicationConfig)
+                && true === \is_array($this->_applicationConfig['csv'])
+            ) {
+                $csvConfig = $this->_applicationConfig['csv'];
+            }
+
             // create output writer
             $responseOutputWriterFactory =
                 new SlimBootstrap\ResponseOutputWriter\Factory(
@@ -128,7 +135,7 @@ class Hook
                     $this->_app->response,
                     $this->_app->response->headers,
                     $this->_applicationConfig['shortName'],
-                    $this->_applicationConfig['csv']
+                    $csvConfig
                 );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
