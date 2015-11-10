@@ -304,91 +304,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     /**
      * @return array
      */
-    public function arrayFlattenDataProvider()
-    {
-        return array(
-            array(
-                array(
-                    "key" => "value",
-                    "foo" => array(
-                        "test" => "test1234",
-                        "bar" => "foobar",
-                        "foo2" => array(
-                            "test" => "test1234",
-                            "bar" => "foobar",
-                        ),
-                    ),
-                ),
-                array(
-                    "foo_test" => "test1234",
-                    "foo_bar" => "foobar",
-                    "foo_foo2_test" => "test1234",
-                    "foo_foo2_bar" => "foobar",
-                    "key" => "value",
-                ),
-            ),
-            array(
-                array(
-                    "someDataObject" => new DataObject(
-                        array(),
-                        array(
-                            "test" => "test1234",
-                            "bar" => "foobar",
-                        )
-                    ),
-                ),
-                array(
-                    "someDataObject_test" => "test1234",
-                    "someDataObject_bar" => "foobar",
-                ),
-            ),
-            array(
-                array(
-                    "someDataObject" => new DataObject(
-                        array(),
-                        array(
-                            "test" => "test1234",
-                            "anotherDO" => new DataObject(
-                                array(
-                                    "dummyId" => 1,
-                                ),
-                                array(
-                                    "foo" => "bar",
-                                )
-                            ),
-                        )
-                    ),
-                ),
-                array(
-                    "someDataObject_test" => "test1234",
-                    "someDataObject_anotherDO_dummyId" => 1,
-                    "someDataObject_anotherDO_foo" => "bar",
-                ),
-            ),
-        );
-    }
-
-    /**
-     * @param array     $data       Data to test with
-     * @param string    $assertion  Expected result
-     *
-     * @dataProvider    arrayFlattenDataProvider
-     */
-    public function test_flatten($data, $assertion)
-    {
-        $method = new \ReflectionMethod(
-            '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_flatten'
-        );
-        $method->setAccessible(true);
-
-        $enclosed = $method->invoke($this->_csvTestOutputWriter, $data);
-        $this->assertEquals($assertion, $enclosed);
-    }
-
-    /**
-     * @return array
-     */
     public function normalizeAllDataProvider()
     {
         return array(
@@ -519,7 +434,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 ),
                 array(
                     array(
-                        "identifier_id" => "dummy",
+                        "id" => "dummy",
                         "foo" => "bar",
                     ),
                 ),
@@ -544,7 +459,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $result = array();
         $arguments = array(
             $data,
-            $data->getIdentifiers(),
             &$result,
         );
         $method->invokeArgs($this->_csvTestOutputWriter, $arguments);

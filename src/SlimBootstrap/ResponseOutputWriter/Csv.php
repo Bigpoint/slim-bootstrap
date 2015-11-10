@@ -162,14 +162,12 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             foreach ($data as $entry) {
                 $this->_buildStructure(
                     $entry,
-                    $entry->getIdentifiers(),
                     $result
                 );
             }
         } else if ($data instanceof DataObject) {
             $this->_buildStructure(
                 $data,
-                $data->getIdentifiers(),
                 $result
             );
         } else {
@@ -192,67 +190,17 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     /**
      * Creates a structured array for each given payload.
      *
-     * @param SlimBootstrap\DataObject $data     The payload of a DataObject
-     * @param array $identifiers The identifiers to build the array structure
-     * @param int   $index       The index of the current element in the
-     *                              identifiers array
-     * @param array $result      Reference of the result array to fill
+     * @param SlimBootstrap\DataObject $data   The payload of a DataObject
+     * @param array                    $result Reference of the result array to fill
      */
     protected function _buildStructure(
         DataObject $data,
-        array $identifiers,
         array &$result
     ) {
-        $newIdentifiers = array();
-        foreach ($identifiers as $key => $value) {
-            $newIdentifiers['identifier' . $this->_keyspaceDelimiter . $key]
-                = $value;
-        }
-        $newIdentifiers = $this->_flatten($newIdentifiers);
-
-        $tmp = \array_merge($newIdentifiers, $data->getData());
+        $tmp = \array_merge($data->getIdentifiers(), $data->getData());
         if (null !== $tmp) {
             $result[] = $tmp;
         }
-    }
-
-    /**
-     * This function flattens an array or DataObject.
-     *
-     * @param   array|SlimBootstrap\DataObject  $origin
-     *                                              Array/DataObject to flatten
-     * @param   string                          $namespace
-     *                                              or null (used for recursion)
-     * @return  array   Flattened payload
-     */
-    private function _flatten($origin, $namespace = null)
-    {
-        $target = array();
-
-        foreach ($origin as $key => $value) {
-            if (null === $namespace) {
-                $keyspace = $key;
-            } else {
-                $keyspace = $namespace . $this->_keyspaceDelimiter . $key;
-            }
-
-            if ($value instanceof DataObject) {
-                $target = \array_merge(
-                    $target,
-                    $this->_flatten($value->getIdentifiers(), $keyspace),
-                    $this->_flatten($value->getData(), $keyspace)
-                );
-            } else if (true === \is_array($value)) {
-                $target = \array_merge(
-                    $target,
-                    $this->_flatten($value, $keyspace)
-                );
-            } else {
-                $target[$keyspace] = $value;
-            }
-        }
-
-        return $target;
     }
 
     /**
