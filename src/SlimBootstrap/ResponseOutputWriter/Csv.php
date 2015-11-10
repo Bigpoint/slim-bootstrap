@@ -158,21 +158,18 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         $result = array();
 
         if (true === \is_array($data)) {
-            $data = $this->_normalizeAll($data);
             $identifiers = null;
             foreach ($data as $entry) {
                 $this->_buildStructure(
                     $entry,
                     $entry->getIdentifiers(),
-                    0,
                     $result
                 );
             }
         } else if ($data instanceof DataObject) {
             $this->_buildStructure(
-                $this->_normalizeOne($data),
+                $data,
                 $data->getIdentifiers(),
-                0,
                 $result
             );
         } else {
@@ -193,80 +190,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
-     * This function adds keys to the DataObject that are necessary
-     * to form uniform data. Nonexistent keys will be filled with null.
-     *
-     * @param SlimBootstrap\DataObject  $data   DataObject to modify
-     * @param array|null                $keys   Array of keys that need
-     *                                          to exist.
-     * @return SlimBootstrap\DataObject         DataObject w/ filled Keys
-     */
-    protected function _normalizeOne(DataObject $data, $keys = null)
-    {
-        if (null === $keys) {
-            $keys = \array_keys($data->getData());
-        }
-
-        $keys = \array_fill_keys($keys, null);
-
-        $countWantedKeys = \count(
-            \array_intersect_key(
-                $keys,
-                $data->getData()
-            )
-        );
-
-        if ($countWantedKeys !== \count($keys)) {
-            $data->setData(\array_merge($keys, $data->getData()));
-        }
-
-        return $data;
-    }
-
-    /**
-     * This function ensures that in all given DataObjects the
-     * same keys exist. Nonexistent keys in a DataObject are
-     * filled with null.
-     *
-     * @param SlimBootstrap\DataObject[]    $data   DataObjects to normalize
-     *
-     * @return SlimBootstrap\DataObject[]   Normalized DataObjects
-     *
-     * @throws SlimBootstrap\CSVEncodingException
-     */
-    protected function _normalizeAll($data)
-    {
-        $keys           = array();
-        $identifierKeys = null;
-        $newData        = array();
-        $returnData     = array();
-
-        foreach ($data as $entry) {
-            if (null === $identifierKeys) {
-                $identifierKeys = \array_keys($entry->getIdentifiers());
-            } else {
-                if (
-                    $identifierKeys !=
-                    \array_keys($entry->getIdentifiers())
-                ) {
-                    throw new CSVEncodingException("Different identifiers!");
-                }
-            }
-
-            $keys = \array_merge($keys, \array_keys($entry->getData()));
-            $entry->setData($this->_flatten($entry->getData()));
-
-            $newData[] = $entry;
-        }
-
-        foreach ($newData as $key => $value) {
-            $returnData[] = $this->_normalizeOne($value, $keys);
-        }
-
-        return $returnData;
-    }
-
-    /**
      * Creates a structured array for each given payload.
      *
      * @param SlimBootstrap\DataObject $data     The payload of a DataObject
@@ -278,7 +201,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     protected function _buildStructure(
         DataObject $data,
         array $identifiers,
-        $index,
         array &$result
     ) {
         $newIdentifiers = array();
@@ -315,7 +237,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             }
 
             if ($value instanceof DataObject) {
-                $value = $this->_normalizeOne($value);
                 $target = \array_merge(
                     $target,
                     $this->_flatten($value->getIdentifiers(), $keyspace),
