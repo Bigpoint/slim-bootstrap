@@ -72,8 +72,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $localCsvTestOutputWriter = $this->getMock(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             array(
-                '_normalizeAll',
-                '_normalizeOne',
                 '_buildStructure',
                 '_csvEncode',
             ),
@@ -84,14 +82,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 'mockShortName',
             )
         );
-        $localCsvTestOutputWriter
-            ->expects($this->once())
-            ->method('_normalizeOne')
-            ->will($this->returnValue($data));
-
-        $localCsvTestOutputWriter
-            ->expects($this->never())
-            ->method('_normalizeAll');
 
         $localCsvTestOutputWriter
             ->expects($this->once())
@@ -123,7 +113,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $localCsvTestOutputWriter->write($data, 200);
     }
 
-
     /**
      * @dataProvider normalizeAllDataProvider
      */
@@ -132,8 +121,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $localCsvTestOutputWriter = $this->getMock(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             array(
-                '_normalizeAll',
-                '_normalizeOne',
                 '_buildStructure',
                 '_csvEncode',
             ),
@@ -144,15 +131,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 'mockShortName',
             )
         );
-
-        $localCsvTestOutputWriter
-            ->expects($this->never())
-            ->method('_normalizeOne');
-
-        $localCsvTestOutputWriter
-            ->expects($this->once())
-            ->method('_normalizeAll')
-            ->will($this->returnValue($data));
 
         $localCsvTestOutputWriter
             ->expects($this->exactly(\count($data)))
@@ -408,130 +386,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($assertion, $enclosed);
     }
 
-
-    /**
-     * @return array
-     */
-    public function normalizeOneDataProvider()
-    {
-        return array(
-            array(
-                new DataObject(
-                    array(
-                        "id" => "dummy",
-                    ),
-                    array(
-                        "foo" => "bar",
-                    )
-                ),
-                array(
-                    "foo",
-                    "test",
-                ),
-                new DataObject(
-                    array(
-                        "id" => "dummy",
-                    ),
-                    array(
-                        "foo" => "bar",
-                        "test" => null,
-                    )
-                ),
-            ),
-            array(
-                new DataObject(
-                    array(
-                        "id" => "dummy",
-                    ),
-                    array(
-                        "foo" => "bar",
-                    )
-                ),
-                array(
-                    "foo",
-                ),
-                new DataObject(
-                    array(
-                        "id" => "dummy",
-                    ),
-                    array(
-                        "foo" => "bar",
-                    )
-                ),
-            ),
-            array(
-                new DataObject(
-                    array(
-                        "id" => "dummy",
-                    ),
-                    array(
-                        "foo" => "bar",
-                    )
-                ),
-                null,
-                new DataObject(
-                    array(
-                        "id" => "dummy",
-                    ),
-                    array(
-                        "foo" => "bar",
-                    )
-                ),
-            ),
-            array(
-                new DataObject(
-                    array(
-                        "foo" => "bar",
-                    ),
-                    array()
-                ),
-                null,
-                new DataObject(
-                    array(
-                        "foo" => "bar",
-                    ),
-                    array(
-                    )
-                ),
-            ),
-            array(
-                new DataObject(
-                    array(
-                        "foo" => "bar",
-                    ),
-                    array()
-                ),
-                array(),
-                new DataObject(
-                    array(
-                        "foo" => "bar",
-                    ),
-                    array(
-                    )
-                ),
-            ),
-        );
-    }
-
-    /**
-     * @param \SlimBootstrap\DataObject     $data       Data to test with
-     * @param array     $keys       Data to test with
-     * @param \SlimBootstrap\DataObject    $assertion  Expected result
-     *
-     * @dataProvider    normalizeOneDataProvider
-     */
-    public function test_normalizeOne($data, $keys, $assertion)
-    {
-        $method = new \ReflectionMethod(
-            '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_normalizeOne'
-        );
-        $method->setAccessible(true);
-
-        $enclosed = $method->invoke($this->_csvTestOutputWriter, $data, $keys);
-        $this->assertEquals($assertion, $enclosed);
-    }
-
     /**
      * @return array
      */
@@ -616,71 +470,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
-     * @param \SlimBootstrap\DataObject     $data       Data to test with
-     * @param \SlimBootstrap\DataObject    $assertion  Expected result
-     *
-     * @dataProvider    normalizeAllDataProvider
-     */
-    public function test_normalizeAll($data, $assertion)
-    {
-        $method = new \ReflectionMethod(
-            '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_normalizeAll'
-        );
-        $method->setAccessible(true);
-
-        $enclosed = $method->invoke($this->_csvTestOutputWriter, $data);
-        $this->assertEquals($assertion, $enclosed);
-    }
-
-    /**
-     * @return array
-     */
-    public function normalizeAllFailureDataProvider()
-    {
-        return array(
-            array(
-                array(
-                    new DataObject(
-                        array(
-                            "id" => "dummy",
-                        ),
-                        array(
-                            "foo" => "bar",
-                        )
-                    ),
-                    new DataObject(
-                        array(
-                            "dummy" => "id",
-                        ),
-                        array(
-                            "test" => "bar",
-                        )
-                    ),
-                ),
-            ),
-        );
-    }
-
-    /**
-     * @param \SlimBootstrap\DataObject     $data       Data to test with
-     *
-     * @dataProvider    normalizeAllFailureDataProvider
-     * @expectedException \SlimBootstrap\CSVEncodingException
-     * @expectedExceptionMessage Different identifiers!
-     */
-    public function test_normalizeAllFailure($data)
-    {
-        $method = new \ReflectionMethod(
-            '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_normalizeAll'
-        );
-        $method->setAccessible(true);
-
-        $method->invoke($this->_csvTestOutputWriter, $data);
-    }
-
-    /**
      * @return array
      */
     public function dataSetToLineMalformedPayloadDataProvider()
@@ -756,7 +545,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $arguments = array(
             $data,
             $data->getIdentifiers(),
-            0,
             &$result,
         );
         $method->invokeArgs($this->_csvTestOutputWriter, $arguments);
