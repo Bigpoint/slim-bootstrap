@@ -32,11 +32,6 @@ class Hook
     private $_aclConfig = null;
 
     /**
-     * @var array
-     */
-    private $_csvConfig = null;
-
-    /**
      * @var SlimBootstrap\ResponseOutputWriter
      */
     private $_responseOutputWriter = null;
@@ -55,20 +50,17 @@ class Hook
      * @param Slim\Slim                    $app
      * @param SlimBootstrap\Authentication $authentication
      * @param array                        $aclConfig
-     * @param array                        $csvConfig
      */
     public function __construct(
         array $applicationConfig,
         Slim\Slim $app,
         SlimBootstrap\Authentication $authentication = null,
-        array $aclConfig = null,
-        array $csvConfig = array()
+        array $aclConfig = null
     ) {
         $this->_applicationConfig = $applicationConfig;
         $this->_app               = $app;
         $this->_authentication    = $authentication;
         $this->_aclConfig         = $aclConfig;
-        $this->_csvConfig         = $csvConfig;
     }
 
     /**
@@ -136,7 +128,7 @@ class Hook
                     $this->_app->response,
                     $this->_app->response->headers,
                     $this->_applicationConfig['shortName'],
-                    $this->_csvConfig
+                    $this->_applicationConfig['csv']
                 );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
