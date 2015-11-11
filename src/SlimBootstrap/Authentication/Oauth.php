@@ -91,6 +91,9 @@ class Oauth implements SlimBootstrap\Authentication
         $curlErrno    = curl_errno($ch);
         $curlError    = curl_error($ch);
 
+        // remove token from url for log output
+        $url = substr($url, 0, stripos($url, 'token') + 6);
+
         if (0 !== $curlErrno) {
             $this->_logger->addError(
                 'curl error (' . $curlErrno . '): ' . $curlError
