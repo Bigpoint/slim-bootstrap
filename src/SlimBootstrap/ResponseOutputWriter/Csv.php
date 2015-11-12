@@ -232,19 +232,21 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                 continue;
             }
 
+            $headline = '';
             // remove multidimensional keys, because they can't be displayed
             // in a reasonable csv
             foreach ($first as $fieldName => $fieldData) {
                 if (true === \is_array($fieldData)) {
                     $multidimensionalFields[$fieldName] = true;
-                    unset($first[$fieldName]);
+                }
+
+                if ($headline === '') {
+                    $headline .= $fieldName;
+                } else {
+                    $headline .= $this->_delimiter . $fieldName;
                 }
             }
-
-            $returnCsv[] = \implode(
-                $this->_delimiter,
-                \array_keys($first)
-            );
+            $returnCsv[] = $headline;
 
             break;
         }
