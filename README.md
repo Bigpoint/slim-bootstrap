@@ -189,7 +189,7 @@ The properties of the CSV are configurable in the 'csv' section of the `applicat
 | `encloseAll`          | `false`  | Enclose every field (true) or only where it is necessary (false) |
 | `null`                | `"NULL"` | Replace a null value in the dataset with this string.            |
 
-**Attention:** CSV outpunt can only show one level of data hierarchy. Fields with another level will be ignored.
+**Attention:** CSV output can only show one layer of data hierarchy. Fields with another layer will be ignored. Also the data will be not normalized, so all fields have to be consistent across all data entries.
 
 ## Authentication
 

@@ -270,9 +270,12 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
-     * @param   array $fields Structured 2+-dimensional-data array
-     * @param   array
-     * @param   bool $encloseAll Force enclosing every field (false)
+     * @param  array $fields Structured 2+-dimensional-data array
+     * @param  array $multidimensionalFields - array of field names,
+     *                                         which will not be displayed
+     *                                         at csv output, because they
+     *                                         can not be displayed reasonable
+     * @param  bool  $encloseAll Force enclosing every field (false)
      *
      * @return  string  Returns the line for $fields.
      *
