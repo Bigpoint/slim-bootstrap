@@ -262,10 +262,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             );
         }
 
-        if (0 == \count($returnCsv)) {
-            throw new CSVEncodingException("No content");
-        }
-
         return \implode($this->_linebreak, $returnCsv);
     }
 

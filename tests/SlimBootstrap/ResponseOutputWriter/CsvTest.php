@@ -275,17 +275,11 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 false,
                 false,
             ),
-            array(
-                array(),
-                false,
-                false,
-            ),
-
         );
     }
 
     /**
-     * @param array     $data                         Data to test with
+     * @param array     $data  Data to test with
      *
      * @dataProvider    csvFailureDataProvider
      * @expectedException \SlimBootstrap\CSVEncodingException
