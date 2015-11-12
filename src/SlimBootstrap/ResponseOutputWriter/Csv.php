@@ -220,7 +220,8 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             );
         }
 
-        $returnCsv = array();
+        $returnCsv              = array();
+        $multidimensionalFields = array();
 
         /*
          * Get first array entry to fill headers. We do not know if the first
@@ -230,6 +231,16 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if (false === \is_array($first)) {
                 continue;
             }
+
+            // remove multidimensional keys, because they can't be displayed
+            // in a reasonable csv
+            foreach ($first as $fieldName => $fieldData) {
+                if (true === \is_array($fieldData)) {
+                    $multidimensionalFields[$fieldName] = true;
+                    unset($first[$fieldName]);
+                }
+            }
+
             $returnCsv[] = \implode(
                 $this->_delimiter,
                 \array_keys($first)
@@ -242,7 +253,11 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if (false === \is_array($entry)) {
                 continue;
             }
-            $returnCsv[] = $this->_buildCsvLineFromDataSet($entry, $encloseAll);
+            $returnCsv[] = $this->_buildCsvLineFromDataSet(
+                $entry,
+                $multidimensionalFields,
+                $encloseAll
+            );
         }
 
         if (0 == \count($returnCsv)) {
@@ -254,7 +269,9 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
 
     /**
      * @param   array $fields Structured 2+-dimensional-data array
+     * @param   array
      * @param   bool $encloseAll Force enclosing every field (false)
+     *
      * @return  string  Returns the line for $fields.
      *
      * @throws SlimBootstrap\CSVEncodingException
@@ -263,18 +280,22 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      */
     private function _buildCsvLineFromDataSet(
         array $fields,
+        array $multidimensionalFields,
         $encloseAll = false
     ) {
         $delimiterEscaped = \preg_quote($this->_delimiter, '/');
         $enclosureEscaped = \preg_quote($this->_enclosure, '/');
 
         $output = array();
-        foreach ($fields as $field) {
+        foreach ($fields as $fileName => $field) {
+            // skip multidimensional fields, because they can't be displayed
+            // in a reasonable csv
+            if (true === array_key_exists($fileName, $multidimensionalFields)) {
+                continue;
+            }
+
             if ($field === null) {
                 $output[] = $this->_null;
-                continue;
-            } else if (true === \is_array($field)) {
-                throw new CSVEncodingException("Malformed payload!");
                 continue;
             }
 

@@ -250,12 +250,12 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         );
         $method->setAccessible(true);
 
-        $enclosed           = $method->invoke(
+        $enclosed = $method->invoke(
             $this->_csvTestOutputWriter,
             $data,
             true
         );
-        $enclosedOnDemand   = $method->invoke(
+        $enclosedOnDemand = $method->invoke(
             $this->_csvTestOutputWriter,
             $data,
             false
@@ -392,30 +392,44 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 array(
+                    'fu' => 'bar',
                     array(
-                        "Malformed" => "payload!",
+                        'Malformed' => 'payload!',
                     ),
                 ),
+                array(
+                    'Malformed'
+                ),
+                'bar',
             ),
         );
     }
 
     /**
-     * @param \SlimBootstrap\DataObject     $data       Data to test with
+     * @param array $data       Data to test with
+     * @param array $multidimensionalFields
      *
      * @dataProvider    dataSetToLineMalformedPayloadDataProvider
-     * @expectedException \SlimBootstrap\CSVEncodingException
-     * @expectedExceptionMessage Malformed payload!
+     *
      */
-    public function test_buildCsvLineFromDataSetMalformedPayload($data)
-    {
+    public function test_buildCsvLineFromDataSetMalformedPayload(
+        $data,
+        $multidimensionalFields,
+        $expectedResult
+    ) {
         $method = new \ReflectionMethod(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             '_buildCsvLineFromDataSet'
         );
         $method->setAccessible(true);
 
-        $method->invoke($this->_csvTestOutputWriter, $data);
+        $result = $method->invoke(
+            $this->_csvTestOutputWriter,
+            $data,
+            $multidimensionalFields
+        );
+
+        $this->assertEquals($expectedResult, $result);
     }
     /**
      * @return array
