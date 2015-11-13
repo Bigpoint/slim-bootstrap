@@ -71,22 +71,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     private $_null = 'NULL';
 
     /**
-     * Keyspace delimiter
-     *      Used if a multidimensional array is used to map values to
-     *          "<parentKey><keyspaceDelimiter><childKey>"
-     *      E.g.
-     *          array("user" => array("name" => "foobar"))
-     *      with
-     *          $_keyspaceDelimiter = '_'
-     *      would become
-     *          "user_name"
-     *
-     *
-     * @var string
-     */
-    private $_keyspaceDelimiter  = '_';
-
-    /**
      * @param Slim\Http\Request  $request   The Slim request object.
      * @param Slim\Http\Response $response  The Slim response object.
      * @param Slim\Http\Headers  $headers   The Slim response headers object.
@@ -123,12 +107,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                 $this->_linebreak = $CSVConfig['linebreak'];
             }
 
-            if (true === \array_key_exists('keyspaceDelimiter', $CSVConfig)
-                && false === empty($CSVConfig['keyspaceDelimiter'])
-            ) {
-                $this->_keyspaceDelimiter = $CSVConfig['keyspaceDelimiter'];
-            }
-
             if (true === \array_key_exists('encloseAll', $CSVConfig)
                 && false === empty($CSVConfig['encloseAll'])
             ) {
@@ -155,28 +133,19 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      */
     public function write($data, $statusCode = 200)
     {
-        $result = array();
+        if ($data instanceof DataObject) {
+            $data = array($data);
 
-        if (true === \is_array($data)) {
-            $identifiers = null;
-            foreach ($data as $entry) {
-                $this->_buildStructure(
-                    $entry,
-                    $result
-                );
-            }
-        } else if ($data instanceof DataObject) {
-            $this->_buildStructure(
-                $data,
-                $result
-            );
-        } else {
+        } else if (false === \is_array($data)) {
             throw new CSVEncodingException(
-                "Expected DataObject, " . \gettype($data) . " given."
+                'Expected array of DataObjects or one DataObject, but ' . \gettype($data) . ' given.'
             );
         }
 
-        $body = $this->_csvEncode($result, $this->_encloseAll);
+        $body = $this->_csvEncode(
+            $data,
+            $this->_encloseAll
+        );
 
         $this->_headers->set(
             'Content-Type',
@@ -188,54 +157,24 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
-     * Creates a structured array for each given payload.
-     *
-     * @param SlimBootstrap\DataObject $data   The payload of a DataObject
-     * @param array                    $result Reference of the result array to fill
-     */
-    protected function _buildStructure(
-        DataObject $data,
-        array &$result
-    ) {
-        $tmp = \array_merge($data->getIdentifiers(), $data->getData());
-        if (null !== $tmp) {
-            $result[] = $tmp;
-        }
-    }
-
-    /**
-     * @param   array   $data       Structured & flattened payload as 2D-array
-     *                                  array($payload1, $payload2, ...);
+     * @param   array   $data       array of DataObjects
      * @param   bool    $encloseAll Force enclosing every field (false)
      *
      * @return  string              Returns the CSV.
      *
-     * @throws \SlimBootstrap\CSVEncodingException
      */
-    protected function _csvEncode($data, $encloseAll = false)
+    protected function _csvEncode(array $data, $encloseAll = false)
     {
-        if (false === \is_array($data)) {
-            throw new CSVEncodingException(
-                "Expected array, " . \gettype($data) . " given."
-            );
-        }
-
-        $returnCsv              = array();
+        $csvOutput              = '';
         $multidimensionalFields = array();
+        $lastFieldName          = '';
 
-        /*
-         * Get first array entry to fill headers. We do not know if the first
-         * $payload is an array as expected or another type.
-         */
+        // evaluate header, last field name, and multidimensial keys
         foreach ($data as $first) {
-            if (false === \is_array($first)) {
-                continue;
-            }
-
             $headline = '';
             // remove multidimensional keys, because they can't be displayed
             // in a reasonable csv
-            foreach ($first as $fieldName => $fieldData) {
+            foreach ($first->getData() as $fieldName => $fieldData) {
                 if (true === \is_array($fieldData)) {
                     $multidimensionalFields[$fieldName] = true;
                 }
@@ -246,48 +185,57 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                     $headline .= $this->_delimiter . $fieldName;
                 }
             }
-            $returnCsv[] = $headline;
+            $csvOutput .= $headline . $this->_linebreak;
 
+            // evaluate last field name
+            $lastFieldName = key(array_slice($first->getData(), -1, 1, true));
             break;
         }
 
+        // build csv line
+        $lastEntry = end($data);
         foreach ($data as $entry) {
-            if (false === \is_array($entry)) {
-                continue;
-            }
-            $returnCsv[] = $this->_buildCsvLineFromDataSet(
-                $entry,
+            $csvOutput .= $this->_buildCsvLineFromDataSet(
+                $entry->getData(),
                 $multidimensionalFields,
+                $lastFieldName,
                 $encloseAll
             );
+
+            if ($entry !== $lastEntry) {
+                $csvOutput .= $this->_linebreak;
+            }
         }
 
-        return \implode($this->_linebreak, $returnCsv);
+        return $csvOutput;
     }
 
     /**
-     * @param  array $fields Structured 2+-dimensional-data array
-     * @param  array $multidimensionalFields - array of field names,
+     * @param  array  $fields Structured 2+-dimensional-data array
+     * @param  array  $multidimensionalFields - array of field names,
      *                                         which will not be displayed
      *                                         at csv output, because they
      *                                         can not be displayed reasonable
-     * @param  bool  $encloseAll Force enclosing every field (false)
+     * @param  strint $lastFieldName - name of the last data field,
+     *                                 it's used to  don't set the delimiter
+     *                                 after last element
+     * @param  bool   $encloseAll Force enclosing every field (false)
      *
      * @return  string  Returns the line for $fields.
      *
-     * @throws SlimBootstrap\CSVEncodingException
      * Adapted from:
      * @see http://php.net/manual/en/function.fputcsv.php#87120
      */
     private function _buildCsvLineFromDataSet(
         array $fields,
         array $multidimensionalFields,
+        $lastFieldName,
         $encloseAll = false
     ) {
         $delimiterEscaped = \preg_quote($this->_delimiter, '/');
         $enclosureEscaped = \preg_quote($this->_enclosure, '/');
 
-        $output = array();
+        $output = '';
         foreach ($fields as $fileName => $field) {
             // skip multidimensional fields, because they can't be displayed
             // in a reasonable csv
@@ -295,8 +243,17 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                 continue;
             }
 
+            $isLast = false;
+            if ($lastFieldName === $fileName) {
+                $isLast = true;
+            }
+
+
             if ($field === null) {
-                $output[] = $this->_null;
+                $output .= $this->_null;
+                if (false === $isLast) {
+                    $output .= $this->_delimiter;
+                }
                 continue;
             }
 
@@ -310,7 +267,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                     $field
                 )
             ) {
-                $output[] = $this->_enclosure
+                $output .= $this->_enclosure
                             . \str_replace(
                                 $this->_enclosure,
                                 $this->_enclosure . $this->_enclosure,
@@ -318,10 +275,14 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
                             )
                             . $this->_enclosure;
             } else {
-                $output[] = $field;
+                $output .= $field;
+            }
+
+            if (false === $isLast) {
+                $output .= $this->_delimiter;
             }
         }
 
-        return \implode($this->_delimiter, $output);
+        return $output;
     }
 }

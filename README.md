@@ -53,7 +53,6 @@ The following structure has to be present:
             "delimiter": ",",
             "enclosure": "\"",
             "linebreak": "\r\n",
-            "keyspaceDelimiter": "_",
             "encloseAll": false,
             "null": "NULL"
         },
@@ -185,7 +184,6 @@ The properties of the CSV are configurable in the 'csv' section of the `applicat
 | `delimiter`           | `","`    | Field delimiter                                                  |
 | `enclosure`           | `"\""`   | Field Enclosure                                                  |
 | `linebreak`           | `"\r\n"` | Linebreak                                                        |
-| `keyspaceDelimiter`   | `"_"`    | Used to delimit merged structure-keys                            |
 | `encloseAll`          | `false`  | Enclose every field (true) or only where it is necessary (false) |
 | `null`                | `"NULL"` | Replace a null value in the dataset with this string.            |
 

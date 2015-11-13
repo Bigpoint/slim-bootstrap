@@ -72,7 +72,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $localCsvTestOutputWriter = $this->getMock(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             array(
-                '_buildStructure',
                 '_csvEncode',
             ),
             array(
@@ -82,11 +81,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 'mockShortName',
             )
         );
-
-        $localCsvTestOutputWriter
-            ->expects($this->once())
-            ->method('_buildStructure')
-            ->will($this->returnValue($data));
 
         $this->_mockHeaders
             ->expects($this->once())
@@ -121,7 +115,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $localCsvTestOutputWriter = $this->getMock(
             '\SlimBootstrap\ResponseOutputWriter\Csv',
             array(
-                '_buildStructure',
                 '_csvEncode',
             ),
             array(
@@ -131,11 +124,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 'mockShortName',
             )
         );
-
-        $localCsvTestOutputWriter
-            ->expects($this->exactly(\count($data)))
-            ->method('_buildStructure')
-            ->will($this->returnValue($data));
 
         $this->_mockHeaders
             ->expects($this->once())
@@ -164,7 +152,7 @@ class CsvTest extends \PHPUnit_Framework_TestCase
 
     /**
      * @expectedException \SlimBootstrap\CSVEncodingException
-     * @expectedExceptionMessage Expected DataObject, NULL given.
+     * @expectedExceptionMessage Expected array of DataObjects or one DataObject, but NULL given.
      */
     public function testWriteUnencodable()
     {
@@ -200,10 +188,12 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         return array(
             array(
                 array(
-                    "skipme because i am not an array",
-                    array(
-                        "useme" => "and abuse me",
-                        "foo"   => "bar",
+                    new DataObject(
+                        array(),
+                        array(
+                            "useme" => "and abuse me",
+                            "foo"   => "bar",
+                        )
                     ),
                 ),
                 "useme,foo\r\n"
@@ -213,14 +203,10 @@ class CsvTest extends \PHPUnit_Framework_TestCase
             ),
             array(
                 array(
-                    array("nullkey" => null),
-                ),
-                "nullkey\r\nNULL",
-                "nullkey\r\nNULL",
-            ),
-            array(
-                array(
-                    array("linebreaktest" => "linebreak\ntest"),
+                    new DataObject(
+                        array(),
+                        array("linebreaktest" => "linebreak\ntest")
+                    ),
                 ),
                 "linebreaktest\r\n"
                 . "\"linebreak\ntest\"",
@@ -262,37 +248,6 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         );
         $this->assertEquals($assertionEnclosed, $enclosed);
         $this->assertEquals($assertionEnclosedOnDemand, $enclosedOnDemand);
-    }
-
-    /**
-     * @return array
-     */
-    public function csvFailureDataProvider()
-    {
-        return array(
-            array(
-                "invalid",
-                false,
-                false,
-            ),
-        );
-    }
-
-    /**
-     * @param array     $data  Data to test with
-     *
-     * @dataProvider    csvFailureDataProvider
-     * @expectedException \SlimBootstrap\CSVEncodingException
-     */
-    public function testCsvEncodeFailure($data)
-    {
-        $method = new \ReflectionMethod(
-            '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_csvEncode'
-        );
-        $method->setAccessible(true);
-
-        $method->invoke($this->_csvTestOutputWriter, $data);
     }
 
     /**
@@ -376,100 +331,5 @@ class CsvTest extends \PHPUnit_Framework_TestCase
                 ),
             ),
         );
-    }
-
-    /**
-     * @return array
-     */
-    public function dataSetToLineMalformedPayloadDataProvider()
-    {
-        return array(
-            array(
-                array(
-                    'fu' => 'bar',
-                    array(
-                        'Malformed' => 'payload!',
-                    ),
-                ),
-                array(
-                    'Malformed'
-                ),
-                'bar',
-            ),
-        );
-    }
-
-    /**
-     * @param array $data       Data to test with
-     * @param array $multidimensionalFields
-     *
-     * @dataProvider    dataSetToLineMalformedPayloadDataProvider
-     *
-     */
-    public function test_buildCsvLineFromDataSetMalformedPayload(
-        $data,
-        $multidimensionalFields,
-        $expectedResult
-    ) {
-        $method = new \ReflectionMethod(
-            '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_buildCsvLineFromDataSet'
-        );
-        $method->setAccessible(true);
-
-        $result = $method->invoke(
-            $this->_csvTestOutputWriter,
-            $data,
-            $multidimensionalFields
-        );
-
-        $this->assertEquals($expectedResult, $result);
-    }
-    /**
-     * @return array
-     */
-    public function buildStructureDataProvider()
-    {
-        return array(
-            array(
-                new DataObject(
-                    array(
-                        "id" => "dummy",
-                    ),
-                    array(
-                        "foo" => "bar",
-                    )
-                ),
-                array(
-                    array(
-                        "id" => "dummy",
-                        "foo" => "bar",
-                    ),
-                ),
-            ),
-        );
-    }
-
-    /**
-     * @param \SlimBootstrap\DataObject     $data       Data to test with
-     * @param array     $expected       Data to test with
-     *
-     * @dataProvider    buildStructureDataProvider
-     */
-    public function test_buildStructure(DataObject $data, $expected)
-    {
-        $method = new \ReflectionMethod(
-            '\SlimBootstrap\ResponseOutputWriter\Csv',
-            '_buildStructure'
-        );
-        $method->setAccessible(true);
-
-        $result = array();
-        $arguments = array(
-            $data,
-            &$result,
-        );
-        $method->invokeArgs($this->_csvTestOutputWriter, $arguments);
-        $this->assertEquals($expected, $result);
     }
 }
