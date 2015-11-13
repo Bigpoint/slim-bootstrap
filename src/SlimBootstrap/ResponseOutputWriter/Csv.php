@@ -172,11 +172,15 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
         // evaluate header, last field name, and multidimensial keys
         foreach ($data as $first) {
             $headline = '';
+            $firstEntry = $first->getData();
+
             // remove multidimensional keys, because they can't be displayed
             // in a reasonable csv
-            foreach ($first->getData() as $fieldName => $fieldData) {
+            foreach ($firstEntry as $fieldName => $fieldData) {
                 if (true === \is_array($fieldData)) {
                     $multidimensionalFields[$fieldName] = true;
+                    unset($firstEntry[$fieldName]);
+                    continue;
                 }
 
                 if ($headline === '') {
@@ -188,7 +192,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             $csvOutput .= $headline . $this->_linebreak;
 
             // evaluate last field name
-            $lastFieldName = key(array_slice($first->getData(), -1, 1, true));
+            $lastFieldName = key(array_slice($firstEntry, -1, 1, true));
             break;
         }
 
