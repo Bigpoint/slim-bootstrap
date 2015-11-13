@@ -138,7 +138,9 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
 
         } else if (false === \is_array($data)) {
             throw new CSVEncodingException(
-                'Expected array of DataObjects or one DataObject, but ' . \gettype($data) . ' given.'
+                'Expected array of DataObjects or one DataObject, but '
+                . \gettype($data)
+                . ' given.'
             );
         }
 
@@ -157,8 +159,9 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
-     * @param   array   $data       array of DataObjects
-     * @param   bool    $encloseAll Force enclosing every field (false)
+     * @param   SlimBootstrap\DataObject[]  $data       array of DataObjects
+     * @param   bool                        $encloseAll Force enclosing every
+     *                                                  field (false)
      *
      * @return  string              Returns the CSV.
      *
