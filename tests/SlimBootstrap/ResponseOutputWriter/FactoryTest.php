@@ -94,6 +94,22 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
                 'acceptHeader' => 'application/json;application/*',
                 'instance'     => '\SlimBootstrap\ResponseOutputWriter\Json',
             ),
+            array(
+                'acceptHeader' => 'text/csv',
+                'instance'     => '\SlimBootstrap\ResponseOutputWriter\Csv',
+            ),
+            array(
+                'acceptHeader' => 'text/csv,application/hal+json',
+                'instance'     => '\SlimBootstrap\ResponseOutputWriter\Csv',
+            ),
+            array(
+                'acceptHeader' => 'text/csv,application/json',
+                'instance'     => '\SlimBootstrap\ResponseOutputWriter\Csv',
+            ),
+            array(
+                'acceptHeader' => 'text/csv,application/*',
+                'instance'     => '\SlimBootstrap\ResponseOutputWriter\Csv',
+            ),
         );
     }
 
@@ -104,7 +120,7 @@ class FactoryTest extends \PHPUnit_Framework_TestCase
      *
      * @expectedException \SlimBootstrap\Exception
      * @expectedExceptionCode 406
-     * @expectedExceptionMessage media type not supported (supported media types: application/hal+json, application/json)
+     * @expectedExceptionMessage media type not supported (supported media types: application/hal+json, application/json, text/csv)
      */
     public function testCreateFailure($acceptHeader)
     {

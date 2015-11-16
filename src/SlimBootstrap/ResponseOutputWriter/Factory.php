@@ -40,8 +40,9 @@ class Factory
      * @var array
      */
     private $_supportedMediaTypes = array(
-        'application/hal+json' => '_createJsonHal',
-        'application/json'     => '_createJson',
+        'application/hal+json'  => '_createJsonHal',
+        'application/json'      => '_createJson',
+        'text/csv'              => '_createCsv',
     );
 
     /**
@@ -50,21 +51,29 @@ class Factory
     private $_shortName = '';
 
     /**
-     * @param Slim\Http\Request  $request  The Slim request object.
-     * @param Slim\Http\Response $response The Slim response object.
-     * @param Slim\Http\Headers  $headers  The Slim response headers object.
-     * @param String             $shortName
+     * @var array
+     */
+    private $_csvConfig = '';
+
+    /**
+     * @param Slim\Http\Request   $request    The Slim request object.
+     * @param Slim\Http\Response  $response   The Slim response object.
+     * @param Slim\Http\Headers   $headers    The Slim response headers object.
+     * @param String              $shortName
+     * @param array               $CSVConfig  Optional CSV Configuration
      */
     public function __construct(
         Slim\Http\Request $request,
         Slim\Http\Response $response,
         Slim\Http\Headers $headers,
-        $shortName
+        $shortName,
+        array $CSVConfig = array()
     ) {
         $this->_request   = $request;
         $this->_response  = $response;
         $this->_headers   = $headers;
         $this->_shortName = $shortName;
+        $this->_csvConfig = $CSVConfig;
     }
 
     /**
@@ -139,6 +148,22 @@ class Factory
             $this->_response,
             $this->_headers,
             $this->_shortName
+        );
+    }
+
+    /**
+     * This function creates a Csv reponse object.
+     *
+     * @return SlimBootstrap\ResponseOutputWriter\Csv
+     */
+    private function _createCsv()
+    {
+        return new SlimBootstrap\ResponseOutputWriter\Csv(
+            $this->_request,
+            $this->_response,
+            $this->_headers,
+            $this->_shortName,
+            $this->_csvConfig
         );
     }
 }

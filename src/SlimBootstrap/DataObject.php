@@ -44,8 +44,9 @@ class DataObject
         array $links = array()
     ) {
         $this->_identifiers = $identifiers;
-        $this->_data        = $data;
         $this->_links       = $links;
+
+        $this->setData($data);
     }
 
     /**
@@ -66,6 +67,16 @@ class DataObject
     public function getData()
     {
         return $this->_data;
+    }
+
+    /**
+     * Sets a new payload for this resource.
+     *
+     * @param array $data
+     */
+    public function setData(array $data)
+    {
+        $this->_data = $data;
     }
 
     /**

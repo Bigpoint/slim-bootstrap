@@ -14,7 +14,7 @@ composer require bigpoint/slim-bootstrap
 In order to configure your webserver to pass all requests in a proper way to the slim application please read the [Route URL Rewriting](http://docs.slimframework.com/#Route-URL-Rewriting) section of the Slim documentation.
 
 ## Setup Skeleton API
-Create a folder for your new api and run the follwing command there.
+Create a folder for your new api and run the following command there.
 
 Set `<YOUR_NAMESPACE>` in the following one liner to your API namespace (camel case) name and execute this line. It will load the framework and create a skeleton structure:
 
@@ -49,6 +49,13 @@ The following structure has to be present:
         "shortName": "###NAMESPACE_LOWER###",
         "cacheDuration": 900,
         "debug": false,
+        "csv": {
+            "delimiter": ",",
+            "enclosure": "\"",
+            "linebreak": "\r\n",
+            "encloseAll": false,
+            "null": "NULL"
+        },
         "monolog": {
             "handler": {
                 "udp": {
@@ -137,7 +144,7 @@ These endpoints should implement one of the _CollectionEndpoint_ interfaces loca
 
 **Resource endpoints**
 
-These endpoints should implement one of the _RessurceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the resource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. When an exception is thrown, the optional third parameter defines the log level with which this exception will be logged. The default is "ERROR". The message of that exception will be printed out as result and the code will be used as HTTP status code.
+These endpoints should implement one of the _ResourceEndpoint_ interfaces located under [\SlimBootstrap\Endpoint](src/SlimBootstrap/Endpoint). It will then get an array of the parameters in the URL the resource is identified with and if it is not a GET endpoint an array of data which will be the payload send with the request. The endpoint should return a [\SlimBootstrap\DataObject](src/SlimBootstrap/DataObject.php) and it should throw a [\SlimBootstrap\Exception](src/SlimBootstrap/Exception.php) if the endpoint encounters an error. When an exception is thrown, the optional third parameter defines the log level with which this exception will be logged. The default is "ERROR". The message of that exception will be printed out as result and the code will be used as HTTP status code.
 
 ### Supported HTTP methods
 At the moment the framework supports the following HTTP methods:
@@ -154,11 +161,11 @@ The written endpoints have to be registered to the framework and the underling S
 
 **addCollectionEndpoint**
 
-This methods needs a HTTP protocol for which this endpoint should be registered. This should be one of the `\SlimBootstrap\Bootstrap::HTTP_METHOD_*` constatnts. As second argument it needs a  `route` which is the relativ url it can be called as so for example "/myendpoint". As third argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The fourth parameter is an instance of [\SlimBootstrap\Endpoint\Collection*](src/SlimBootstrap/Endpoint/). As the sixth parameter you can optionally pass a boolean to define whether authentication should be enabled or disabled for this one endpoint. This overwrites the global authentication definition.
+This methods needs a HTTP protocol for which this endpoint should be registered. This should be one of the `\SlimBootstrap\Bootstrap::HTTP_METHOD_*` constants. As second argument it needs a  `route` which is the relative url it can be called as so for example "/myendpoint". As third argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The fourth parameter is an instance of [\SlimBootstrap\Endpoint\Collection*](src/SlimBootstrap/Endpoint/). As the sixth parameter you can optionally pass a boolean to define whether authentication should be enabled or disabled for this one endpoint. This overwrites the global authentication definition.
 
 **addResourceEndpoint**
 
-This methods needs a HTTP protocol for which this endpoint should be registered. This should be one of the `\SlimBootstrap\Bootstrap::HTTP_METHOD_*` constatnts. As second argument it needs a `route` which is the relativ url it can be called as so for example "/myendpoint/:someId". As third argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The fourth parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions. Finally the fifth parameter is an instance of [\SlimBootstrap\Endpoint\Resource*](src/SlimBootstrap/Endpoint/). As the sixth parameter you can optionally pass a boolean to define whether authentication should be enabled or disabled for this one endpoint. This overwrites the global authentication definition.
+This methods needs a HTTP protocol for which this endpoint should be registered. This should be one of the `\SlimBootstrap\Bootstrap::HTTP_METHOD_*` constants. As second argument it needs a `route` which is the relative url it can be called as so for example "/myendpoint/:someId". As third argument it needs a `name` which will be used to identify the route and which can then be used in the ACL config to configure access to this route / endpoint. The fourth parameter is an array of conditions that can define constrains for the passed id (`someId`). These constrains are normal PHP regular expressions. Finally the fifth parameter is an instance of [\SlimBootstrap\Endpoint\Resource*](src/SlimBootstrap/Endpoint/). As the sixth parameter you can optionally pass a boolean to define whether authentication should be enabled or disabled for this one endpoint. This overwrites the global authentication definition.
 
 ## Response Output
 
@@ -166,24 +173,39 @@ Slim-Bootstrap supports multiple response output types, which can be requested v
 
 - [application/hal+json](http://stateless.co/hal_specification.html) __(default)__
 - application/json
+- [text/csv](https://tools.ietf.org/html/rfc4180)
+
+### Regarding `text/csv` Output
+
+The properties of the CSV are configurable in the 'csv' section of the `application.json`. If not existent the following defaults will be used:
+
+| Configvalue           | Default  | Description                                                      |
+| --------------------- | -------- | ---------------------------------------------------------------- |
+| `delimiter`           | `","`    | Field delimiter                                                  |
+| `enclosure`           | `"\""`   | Field Enclosure                                                  |
+| `linebreak`           | `"\r\n"` | Linebreak                                                        |
+| `encloseAll`          | `false`  | Enclose every field (true) or only where it is necessary (false) |
+| `null`                | `"NULL"` | Replace a null value in the dataset with this string.            |
+
+**Attention:** CSV output can only show one layer of data hierarchy. Fields with another layer will be ignored. Also the data will be not normalized, so all fields have to be consistent across all data entries.
 
 ## Authentication
 
-It's possible to enable an authentication against an oauth server, to secure your api and set endpoint specific permissions. The oauth server has to provide the clientId as `entity_id` in its /me endpoint of assigned token, to work propatly with slim-bootstraps authentication.
+It's possible to enable an authentication against an oauth server, to secure your api and set endpoint specific permissions. The oauth server has to provide the clientId as `entity_id` in its /me endpoint of assigned token, to work properly with slim-bootstraps authentication.
 
 ### How it works
 
-When authentication is enabled, you have to add the url parameter `access_token` to api calls with an access token given from your oauth server. The authentication logic validate this access token aginst the configurated oauth server via its /me endpoint. Next the collected clientId from /me endpoint is going to be validated against requested endpoint and configurated acl. If all is fine, access is granted to requester. Otherwise request is aborted with an 401 or 403.
+When authentication is enabled, you have to add the url parameter `access_token` to api calls with an access token given from your oauth server. The authentication logic validate this access token against the configured oauth server via its /me endpoint. Next the collected clientId from /me endpoint is going to be validated against requested endpoint and configured acl. If all is fine, access is granted to requester. Otherwise request is aborted with an 401 or 403.
 
 ### Enable Authentication
 
-If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `authenticationUrl`. At the end of that value the passed access token is concatinated.
+If you want to use the authentication against an oauth /me endpoint you have to define the url to the /me endpoint in the config field `authenticationUrl`. At the end of that value the passed access token is concatenated.
 
 ~~~
 https://myserver.com/me?access_token=
 ~~~
 
-Also you have to add a config/acl.json, which defines accessable endpoints for a clientId.
+Also you have to add a config/acl.json, which defines accessible endpoints for a clientId.
 ~~~json
     {
         "roles": {
@@ -259,7 +281,7 @@ If you want, you can define your own authentication class which for example read
 
 
 ## License & Authors
-- Authors:: Peter Ahrens (<pahrens@bigpoint.net>), Andreas Schleifer (<aschleifer@bigpoint.net>)
+- Authors:: Peter Ahrens (<pahrens@bigpoint.net>), Andreas Schleifer (<aschleifer@bigpoint.net>), Hendrik Meyer (<hmeyer@bigpoint.net>)
 
 ~~~
 Copyright:: 2015 Bigpoint GmbH

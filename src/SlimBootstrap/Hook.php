@@ -121,13 +121,21 @@ class Hook
     public function outputWriter()
     {
         try {
+            $csvConfig = array();
+            if (true === \array_key_exists('csv', $this->_applicationConfig)
+                && true === \is_array($this->_applicationConfig['csv'])
+            ) {
+                $csvConfig = $this->_applicationConfig['csv'];
+            }
+
             // create output writer
             $responseOutputWriterFactory =
                 new SlimBootstrap\ResponseOutputWriter\Factory(
                     $this->_app->request,
                     $this->_app->response,
                     $this->_app->response->headers,
-                    $this->_applicationConfig['shortName']
+                    $this->_applicationConfig['shortName'],
+                    $csvConfig
                 );
             $this->_responseOutputWriter = $responseOutputWriterFactory->create(
                 $this->_app->request->headers->get('Accept')
@@ -153,7 +161,10 @@ class Hook
                     'REQUEST_METHOD'
                 ) . $currentRoute->getPattern();
 
-                if (true === array_key_exists($routeId, $this->_endpointAuthentication)
+                if (true === array_key_exists(
+                        $routeId,
+                        $this->_endpointAuthentication
+                    )
                     && false === $this->_endpointAuthentication[$routeId]
                 ) {
                     return;
