@@ -4,6 +4,7 @@
  - feature: it is now possible to generate a CSV-Response ([RFC 4180](https://tools.ietf.org/html/rfc4180) compliant) by setting the `Accept`-header to `text/csv`.
     The properties are configurable in the 'csv' section of the `application.json`.
  - documentation: Fixed some typos and added `text/csv` to supported formats.
+ - removed access_tokens from error logs at oauth authentication curls
 
 ## 1.4.0
  - feature: introduce "access_token" parameter to handle the access token. The "token" parameter is now deprecated and may be removed in some future version. Using the old "token" parameter will now throw a notice.
