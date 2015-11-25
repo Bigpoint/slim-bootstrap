@@ -201,7 +201,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
 
         // build csv line
         $lastEntry = end($data);
-        foreach ($data as $entry) {
+        foreach ($data as $key => $entry) {
             $csvOutput .= $this->_buildCsvLineFromDataSet(
                 $entry->getData(),
                 $multidimensionalFields,
@@ -212,6 +212,8 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
             if ($entry !== $lastEntry) {
                 $csvOutput .= $this->_linebreak;
             }
+            // unset entry to optimize memory usage
+            unset($data[$key]);
         }
 
         return $csvOutput;
