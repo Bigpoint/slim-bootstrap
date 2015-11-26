@@ -1,4 +1,6 @@
 # Changelog
+## 1.5.1
+ - improved memory usage of csv output writer
 
 ## 1.5.0
  - feature: it is now possible to generate a CSV-Response ([RFC 4180](https://tools.ietf.org/html/rfc4180) compliant) by setting the `Accept`-header to `text/csv`.
