@@ -203,9 +203,30 @@ class Bootstrap
         }
 
         try {
-            $this->_hook->getResponseOutputWriter()->write(
-                $endpoint->$type($params, $this->_app->request->$type())
-            );
+            $outputWriter = &$this->_hook->getResponseOutputWriter();
+            if ($endpoint instanceof SlimBootstrap\Endpoint\Streamable) {
+                if ($outputWriter instanceof SlimBootstrap\ResponseOutputWriterStreamable) {
+                    $outputWriter->setStatusCode(200);
+
+                    $endpoint->setOutputWriter($outputWriter);
+
+                    \ob_start();
+
+                    $endpoint->$type($params, $this->_app->request->$type());
+
+                    \ob_end_clean();
+                } else {
+                    // TODO: find nicer wording
+                    throw new SlimBootstrap\Exception(
+                        'media type does not support streaming',
+                        406
+                    );
+                }
+            } else {
+                $outputWriter->write(
+                    $endpoint->$type($params, $this->_app->request->$type())
+                );
+            }
         } catch (SlimBootstrap\Exception $e) {
             $this->_app->getLog()->log(
                 $e->getLogLevel(),

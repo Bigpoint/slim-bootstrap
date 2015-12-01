@@ -12,7 +12,8 @@ use SlimBootstrap\DataObject;
  *
  * @package SlimBootstrap\ResponseOutputWriter
  */
-class Csv implements SlimBootstrap\ResponseOutputWriter
+class Csv implements SlimBootstrap\ResponseOutputWriter,
+                     SlimBootstrap\ResponseOutputWriterStreamable
 {
     /**
      * The Slim request object.
@@ -69,6 +70,21 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      * @var string
      */
     private $_null = 'NULL';
+
+    /**
+     * @var array
+     */
+    private $_multidimensionalFields = array();
+
+    /**
+     * @var string
+     */
+    private $_lastFieldName = '';
+
+    /**
+     * @var bool
+     */
+    private $_firstCall = true;
 
     /**
      * @param Slim\Http\Request  $request   The Slim request object.
@@ -159,6 +175,79 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
     }
 
     /**
+     * @param int $statusCode
+     */
+    public function setStatusCode($statusCode = 200)
+    {
+        \http_response_code($statusCode);
+    }
+
+    /**
+     * @param DataObject $entry
+     */
+    public function writeToStream(SlimBootstrap\DataObject $entry)
+    {
+        if (true === $this->_firstCall) {
+            \header('Content-Type: text/csv; charset=UTF-8');
+
+            echo $this->_determineHeadline(array($entry));
+
+            $this->_firstCall = false;
+        }
+
+        echo $this->_buildCsvLineFromDataSet(
+            $entry->getData(),
+            $this->_multidimensionalFields,
+            $this->_lastFieldName,
+            $this->_encloseAll
+        ) . $this->_linebreak;
+
+        \flush();
+        \ob_flush();
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return string
+     */
+    private function _determineHeadline(array $data)
+    {
+        $this->_multidimensionalFields = array();
+        $this->_lastFieldName          = '';
+        $headline                      = '';
+
+        // evaluate header, last field name, and multidimensial keys
+        /** @var SlimBootstrap\DataObject $first */
+        foreach ($data as $first) {
+            $firstEntry = $first->getData();
+
+            // remove multidimensional keys, because they can't be displayed
+            // in a reasonable csv
+            foreach ($firstEntry as $fieldName => $fieldData) {
+                if (true === \is_array($fieldData)) {
+                    $this->_multidimensionalFields[$fieldName] = true;
+                    unset($firstEntry[$fieldName]);
+                    continue;
+                }
+
+                if ('' === $headline) {
+                    $headline .= $fieldName;
+                } else {
+                    $headline .= $this->_delimiter . $fieldName;
+                }
+            }
+
+            // evaluate last field name
+            $this->_lastFieldName = key(array_slice($firstEntry, -1, 1, true));
+            break;
+        }
+
+        return $headline . $this->_linebreak;
+    }
+
+
+    /**
      * @param   SlimBootstrap\DataObject[]  $data       array of DataObjects
      * @param   bool                        $encloseAll Force enclosing every
      *                                                  field (false)
@@ -168,44 +257,15 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      */
     protected function _csvEncode(array $data, $encloseAll = false)
     {
-        $csvOutput              = '';
-        $multidimensionalFields = array();
-        $lastFieldName          = '';
-
-        // evaluate header, last field name, and multidimensial keys
-        foreach ($data as $first) {
-            $headline = '';
-            $firstEntry = $first->getData();
-
-            // remove multidimensional keys, because they can't be displayed
-            // in a reasonable csv
-            foreach ($firstEntry as $fieldName => $fieldData) {
-                if (true === \is_array($fieldData)) {
-                    $multidimensionalFields[$fieldName] = true;
-                    unset($firstEntry[$fieldName]);
-                    continue;
-                }
-
-                if ($headline === '') {
-                    $headline .= $fieldName;
-                } else {
-                    $headline .= $this->_delimiter . $fieldName;
-                }
-            }
-            $csvOutput .= $headline . $this->_linebreak;
-
-            // evaluate last field name
-            $lastFieldName = key(array_slice($firstEntry, -1, 1, true));
-            break;
-        }
+        $csvOutput = $this->_determineHeadline($data);
 
         // build csv line
         $lastEntry = end($data);
         foreach ($data as $key => $entry) {
             $csvOutput .= $this->_buildCsvLineFromDataSet(
                 $entry->getData(),
-                $multidimensionalFields,
-                $lastFieldName,
+                $this->_multidimensionalFields,
+                $this->_lastFieldName,
                 $encloseAll
             );
 
@@ -225,7 +285,7 @@ class Csv implements SlimBootstrap\ResponseOutputWriter
      *                                         which will not be displayed
      *                                         at csv output, because they
      *                                         can not be displayed reasonable
-     * @param  strint $lastFieldName - name of the last data field,
+     * @param  string $lastFieldName - name of the last data field,
      *                                 it's used to  don't set the delimiter
      *                                 after last element
      * @param  bool   $encloseAll Force enclosing every field (false)
