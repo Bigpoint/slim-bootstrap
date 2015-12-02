@@ -216,10 +216,10 @@ class Bootstrap
 
                     \ob_end_clean();
                 } else {
-                    // TODO: find nicer wording
                     throw new SlimBootstrap\Exception(
                         'media type does not support streaming',
-                        406
+                        406,
+                        Slim\Log::WARN
                     );
                 }
             } else {

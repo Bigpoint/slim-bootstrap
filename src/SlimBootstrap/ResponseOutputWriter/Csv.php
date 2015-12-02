@@ -176,6 +176,8 @@ class Csv implements SlimBootstrap\ResponseOutputWriter,
 
     /**
      * @param int $statusCode
+     *
+     * @codeCoverageIgnore
      */
     public function setStatusCode($statusCode = 200)
     {
@@ -202,6 +204,14 @@ class Csv implements SlimBootstrap\ResponseOutputWriter,
             $this->_encloseAll
         ) . $this->_linebreak;
 
+        $this->_flush();
+    }
+
+    /**
+     * @codeCoverageIgnore
+     */
+    protected function _flush()
+    {
         \flush();
         \ob_flush();
     }
