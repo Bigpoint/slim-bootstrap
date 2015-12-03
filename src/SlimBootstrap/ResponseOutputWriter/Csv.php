@@ -175,16 +175,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter,
     }
 
     /**
-     * @param int $statusCode
-     *
-     * @codeCoverageIgnore
-     */
-    public function setStatusCode($statusCode = 200)
-    {
-        $this->_response->setStatus($statusCode);
-    }
-
-    /**
      * @param DataObject $entry
      * @param int $statusCode   - default 200, is only set at first method call
      */
