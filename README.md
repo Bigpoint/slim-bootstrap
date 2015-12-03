@@ -195,22 +195,21 @@ class SomeEndpoint implements SlimBootstrap\Endpoint\ResourceGet,
     }
 
     ...
-```
 
-```php
-...
-public function get(array $parameters) {
-    ...
-    $dbResultStatement = $database->getDbResult(); //PDO Statement object
+    public function get(array $parameters) {
+        ...
+        $dbResultStatement = $database->getDbResult(); //PDO Statement object
 
-    // fetching single db rows here to save memory
-    while (false !== ($entry = $dbResultStatement->fetch(
-        \PDO::FETCH_ASSOC,
-        \PDO::FETCH_ORI_NEXT
-    ))) {
-        $this->_outputWriter->writeToStream(
-            $this->_createDataObject((int)$entry['id'], $entry)
-        );
+        // fetching single db rows here to save memory
+        while (false !== ($entry = $dbResultStatement->fetch(
+            \PDO::FETCH_ASSOC,
+            \PDO::FETCH_ORI_NEXT
+        ))) {
+            $this->_outputWriter->writeToStream(
+                $this->_createDataObject((int)$entry['id'], $entry)
+            );
+        }
+        ...
     }
     ...
 }
