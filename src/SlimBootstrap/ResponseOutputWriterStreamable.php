@@ -25,11 +25,6 @@ interface ResponseOutputWriterStreamable
     );
 
     /**
-     * @param int $statusCode
-     */
-    public function setStatusCode($statusCode = 200);
-
-    /**
      * @param DataObject $data
      */
     public function writeToStream(SlimBootstrap\DataObject $data);

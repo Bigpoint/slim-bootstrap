@@ -181,16 +181,23 @@ class Csv implements SlimBootstrap\ResponseOutputWriter,
      */
     public function setStatusCode($statusCode = 200)
     {
-        \http_response_code($statusCode);
+        $this->_response->setStatus($statusCode);
     }
 
     /**
      * @param DataObject $entry
+     * @param int $statusCode   - default 200, is only set at first method call
      */
-    public function writeToStream(SlimBootstrap\DataObject $entry)
-    {
+    public function writeToStream(
+        SlimBootstrap\DataObject $entry,
+        $statusCode = 200
+    ) {
         if (true === $this->_firstCall) {
-            \header('Content-Type: text/csv; charset=UTF-8');
+            $this->_headers->set(
+                'Content-Type',
+                'text/csv; charset=UTF-8'
+            );
+            $this->_response->setStatus($statusCode);
 
             echo $this->_determineHeadline(array($entry));
 
@@ -255,7 +262,6 @@ class Csv implements SlimBootstrap\ResponseOutputWriter,
 
         return $headline . $this->_linebreak;
     }
-
 
     /**
      * @param   SlimBootstrap\DataObject[]  $data       array of DataObjects

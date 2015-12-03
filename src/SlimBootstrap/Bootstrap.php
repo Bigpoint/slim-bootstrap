@@ -206,15 +206,12 @@ class Bootstrap
             $outputWriter = &$this->_hook->getResponseOutputWriter();
             if ($endpoint instanceof SlimBootstrap\Endpoint\Streamable) {
                 if ($outputWriter instanceof SlimBootstrap\ResponseOutputWriterStreamable) {
-                    $outputWriter->setStatusCode(200);
-
                     $endpoint->setOutputWriter($outputWriter);
 
                     \ob_start();
-
                     $endpoint->$type($params, $this->_app->request->$type());
-
                     \ob_end_clean();
+
                 } else {
                     throw new SlimBootstrap\Exception(
                         'media type does not support streaming',
