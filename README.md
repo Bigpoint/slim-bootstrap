@@ -186,7 +186,7 @@ To handle large response output, its possible to sent the response body as data 
 
 ```php
 class SomeEndpoint implements SlimBootstrap\Endpoint\ResourceGet,
-                                      SlimBootstrap\Endpoint\Streamable
+                              SlimBootstrap\Endpoint\Streamable
 {
     public function setOutputWriter(
         SlimBootstrap\ResponseOutputWriterStreamable $outputWriter
