@@ -1,4 +1,7 @@
 # Changelog
+## 1.6.0
+ - implemented streamable csv output, to handle large response output
+
 ## 1.5.1
  - improved memory usage of csv output writer
 
