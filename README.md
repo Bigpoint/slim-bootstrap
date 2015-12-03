@@ -175,6 +175,46 @@ Slim-Bootstrap supports multiple response output types, which can be requested v
 - application/json
 - [text/csv](https://tools.ietf.org/html/rfc4180)
 
+### Streamable Output
+
+To handle large response output, its possible to sent the response body as data stream. You have to add the interface **SlimBootstrap\Endpoint\Streamable** to your endpoint, to enable this feature. Next you have to call the method **writeToStream** at the injected outputwriter for each data entry/line. The output writer have to support the streamable output. Using normal and streamable outputwriter at the same time for the same endpoint is not possible at the moment.
+
+**streamable output types**
+- text/csv
+
+**example**
+
+```php
+class SomeEndpoint implements SlimBootstrap\Endpoint\ResourceGet,
+                              SlimBootstrap\Endpoint\Streamable
+{
+    public function setOutputWriter(
+        SlimBootstrap\ResponseOutputWriterStreamable $outputWriter
+    ) {
+        $this->_outputWriter = $outputWriter;
+    }
+
+    ...
+
+    public function get(array $parameters) {
+        ...
+        $dbResultStatement = $database->getDbResult(); //PDO Statement object
+
+        // fetching single db rows here to save memory
+        while (false !== ($entry = $dbResultStatement->fetch(
+            \PDO::FETCH_ASSOC,
+            \PDO::FETCH_ORI_NEXT
+        ))) {
+            $this->_outputWriter->writeToStream(
+                $this->_createDataObject((int)$entry['id'], $entry)
+            );
+        }
+        ...
+    }
+    ...
+}
+```
+
 ### Regarding `text/csv` Output
 
 The properties of the CSV are configurable in the 'csv' section of the `application.json`. If not existent the following defaults will be used:

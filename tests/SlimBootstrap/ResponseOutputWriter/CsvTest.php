@@ -65,6 +65,8 @@ class CsvTest extends \PHPUnit_Framework_TestCase
     }
 
     /**
+     * @param $data
+     *
      * @dataProvider writeOneProvider
      */
     public function testWriteOne($data)
@@ -107,7 +109,58 @@ class CsvTest extends \PHPUnit_Framework_TestCase
         $localCsvTestOutputWriter->write($data, 200);
     }
 
+    public function testWriteToStream()
+    {
+        $localCsvTestOutputWriter = $this->getMock(
+            '\SlimBootstrap\ResponseOutputWriter\Csv',
+            array(
+                '_flush',
+            ),
+            array(
+                $this->_mockRequest,
+                $this->_mockResponse,
+                $this->_mockHeaders,
+                'mockShortName',
+            )
+        );
+
+        $localCsvTestOutputWriter
+            ->expects($this->exactly(2))
+            ->method('_flush');
+
+        ob_start();
+
+        $localCsvTestOutputWriter->writeToStream(
+            new \SlimBootstrap\DataObject(
+                array(),
+                array(
+                    'key1' => 'value1_1',
+                    'key2' => 'value1_2',
+                )
+            )
+        );
+
+        $localCsvTestOutputWriter->writeToStream(
+            new \SlimBootstrap\DataObject(
+                array(),
+                array(
+                    'key1' => 'value2_1',
+                    'key2' => 'value2_2',
+                )
+            )
+        );
+
+        $output = ob_get_clean();
+
+        $this->assertEquals(
+            "key1,key2\r\nvalue1_1,value1_2\r\nvalue2_1,value2_2\r\n",
+            $output
+        );
+    }
+
     /**
+     * @param $data
+     *
      * @dataProvider normalizeAllDataProvider
      */
     public function testWriteArray($data)
