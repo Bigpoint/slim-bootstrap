@@ -1,4 +1,7 @@
 # Changelog
+## 1.6.1
+- fixed setting http header and status code for streamable csv output
+
 ## 1.6.0
  - implemented streamable csv output, to handle large response output
 
