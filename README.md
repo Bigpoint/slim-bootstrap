@@ -201,7 +201,8 @@ class SomeEndpoint implements SlimBootstrap\Endpoint\ResourceGet,
 
 ```
 ...
-
+<?php
+...
 public function get(array $parameters) {
     ...
     $dbResultStatement = $database->getDbResult(); //PDO Statement object
