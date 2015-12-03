@@ -185,8 +185,6 @@ To handle large response output, its possible to sent the response body as data 
 **example**
 
 ```php
-<php?
-
 class SomeEndpoint implements SlimBootstrap\Endpoint\ResourceGet,
                                       SlimBootstrap\Endpoint\Streamable
 {
@@ -199,9 +197,7 @@ class SomeEndpoint implements SlimBootstrap\Endpoint\ResourceGet,
     ...
 ```
 
-```
-...
-<?php
+```php
 ...
 public function get(array $parameters) {
     ...
