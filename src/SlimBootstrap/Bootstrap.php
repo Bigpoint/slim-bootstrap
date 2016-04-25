@@ -220,9 +220,23 @@ class Bootstrap
                     );
                 }
             } else {
-                $outputWriter->write(
-                    $endpoint->$type($params, $this->_app->request->$type())
+                $data = $endpoint->$type(
+                    $params, $this->_app->request->$type()
                 );
+
+                if ($endpoint instanceof SlimBootstrap\Endpoint\PlainData) {
+                    if ($outputWriter instanceof SlimBootstrap\ResponseOutputWriterPlainData) {
+                        $outputWriter->writePlain($data);
+                    } else {
+                        throw new SlimBootstrap\Exception(
+                            'media type does not support plain data writing',
+                            406,
+                            Slim\Log::WARN
+                        );
+                    }
+                } else {
+                    $outputWriter->write($data);
+                }
             }
         } catch (SlimBootstrap\Exception $e) {
             $this->_app->getLog()->log(
