@@ -10,7 +10,8 @@ use \Slim;
  *
  * @package SlimBootstrap\ResponseOutputWriter
  */
-class Json implements SlimBootstrap\ResponseOutputWriter
+class Json implements SlimBootstrap\ResponseOutputWriter,
+                      SlimBootstrap\ResponseOutputWriterPlainData
 {
     /**
      * The Slim request object.
@@ -48,6 +49,20 @@ class Json implements SlimBootstrap\ResponseOutputWriter
         $this->_request  = $request;
         $this->_response = $response;
         $this->_headers  = $headers;
+    }
+
+    /**
+     * @param array $data
+     * @param int   $statusCode
+     */
+    public function writePlain(array $data, $statusCode = 200)
+    {
+        $this->_headers->set(
+            'Content-Type',
+            'application/json; charset=UTF-8'
+        );
+        $this->_response->setStatus($statusCode);
+        $this->_response->setBody($this->_jsonEncode($data));
     }
 
     /**

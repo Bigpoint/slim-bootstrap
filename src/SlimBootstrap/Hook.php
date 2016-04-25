@@ -100,7 +100,8 @@ class Hook
     public function requestPath()
     {
         $this->_app->getLog()->debug(
-            'Request path: ' . $this->_app->request->getPathInfo()
+            'Request: ' . $this->_app->request->getMethod()
+            . ' - ' . $this->_app->request->getPathInfo()
         );
     }
 

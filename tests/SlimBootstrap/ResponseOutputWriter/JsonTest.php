@@ -11,22 +11,22 @@ use \SlimBootstrap\DataObject;
 class JsonTest extends \PHPUnit_Framework_TestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \PHPUnit_Framework_MockObject_MockObject|\Slim\Http\Request
      */
     private $_mockRequest = null;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \PHPUnit_Framework_MockObject_MockObject|\Slim\Http\Response
      */
     private $_mockResponse = null;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \PHPUnit_Framework_MockObject_MockObject|\Slim\Http\Headers
      */
     private $_mockHeaders = null;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject
+     * @var \PHPUnit_Framework_MockObject_MockObject|\SlimBootstrap\ResponseOutputWriter\Json
      */
     private $_jsonTestOutputWriter = null;
 
@@ -165,6 +165,43 @@ class JsonTest extends \PHPUnit_Framework_TestCase
                     array()
                 ),
             ),
+        );
+    }
+
+    public function testWritePlain()
+    {
+        $this->_jsonTestOutputWriter
+            ->expects($this->exactly(1))
+            ->method('_jsonEncode')
+            ->with(
+                $this->equalTo(
+                    array(
+                        'mockKey' => 'mockValue',
+                    )
+                )
+            )
+            ->will($this->returnValue('{"mockKey": "mockValue"}'));
+
+        $this->_mockHeaders
+            ->expects($this->exactly(1))
+            ->method('set')
+            ->with(
+                $this->equalTo('Content-Type'),
+                $this->equalTo('application/json; charset=UTF-8')
+            );
+        $this->_mockResponse
+            ->expects($this->exactly(1))
+            ->method('setStatus')
+            ->with($this->equalTo(200));
+        $this->_mockResponse
+            ->expects($this->exactly(1))
+            ->method('setBody')
+            ->with($this->equalTo('{"mockKey": "mockValue"}'));
+
+        $this->_jsonTestOutputWriter->writePlain(
+            array(
+                'mockKey' => 'mockValue',
+            )
         );
     }
 }
