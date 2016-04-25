@@ -182,6 +182,13 @@ class JsonTest extends \PHPUnit_Framework_TestCase
             )
             ->will($this->returnValue('{"mockKey": "mockValue"}'));
 
+        $this->_mockHeaders
+            ->expects($this->exactly(1))
+            ->method('set')
+            ->with(
+                $this->equalTo('Content-Type'),
+                $this->equalTo('application/json; charset=UTF-8')
+            );
         $this->_mockResponse
             ->expects($this->exactly(1))
             ->method('setStatus')

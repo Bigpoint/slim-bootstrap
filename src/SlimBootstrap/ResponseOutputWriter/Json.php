@@ -57,6 +57,10 @@ class Json implements SlimBootstrap\ResponseOutputWriter,
      */
     public function writePlain(array $data, $statusCode = 200)
     {
+        $this->_headers->set(
+            'Content-Type',
+            'application/json; charset=UTF-8'
+        );
         $this->_response->setStatus($statusCode);
         $this->_response->setBody($this->_jsonEncode($data));
     }
