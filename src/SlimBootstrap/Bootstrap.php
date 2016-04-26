@@ -204,6 +204,30 @@ class Bootstrap
 
         try {
             $outputWriter = &$this->_hook->getResponseOutputWriter();
+
+            if ($endpoint instanceof SlimBootstrap\Endpoint\ForceDefaultMimeType) {
+                $csvConfig = array();
+                if (true === \array_key_exists('csv', $this->_applicationConfig)
+                    && true === \is_array($this->_applicationConfig['csv'])
+                ) {
+                    $csvConfig = $this->_applicationConfig['csv'];
+                }
+
+                // create output writer
+                $responseOutputWriterFactory =
+                    new SlimBootstrap\ResponseOutputWriter\Factory(
+                        $this->_app->request,
+                        $this->_app->response,
+                        $this->_app->response->headers,
+                        $this->_applicationConfig['shortName'],
+                        $csvConfig
+                    );
+
+                $outputWriter = $responseOutputWriterFactory->create(
+                    $endpoint->getDefaultMimeType()
+                );
+            }
+
             if ($endpoint instanceof SlimBootstrap\Endpoint\Streamable) {
                 if ($outputWriter instanceof SlimBootstrap\ResponseOutputWriterStreamable) {
                     $endpoint->setOutputWriter($outputWriter);
