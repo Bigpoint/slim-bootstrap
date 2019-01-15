@@ -15,12 +15,12 @@ class Factory
     /**
      * @var array
      */
-    private $_config = null;
+    private $config;
 
     /**
      * @var Slim\Log
      */
-    private $_logger = null;
+    private $logger;
 
     /**
      * @param array          $config
@@ -28,8 +28,21 @@ class Factory
      */
     public function __construct(array $config, Monolog\Logger $logger)
     {
-        $this->_config = $config;
-        $this->_logger = $logger;
+        $this->config = $config;
+        $this->logger = $logger;
+    }
+
+    /**
+     * @return SlimBootstrap\Authentication\Auth0
+     */
+    public function createAuth0()
+    {
+        return new SlimBootstrap\Authentication\Auth0(
+            $this->config['auth0']['authorizedIss'],
+            $this->logger,
+            $this->config['auth0']['supportedAlgorithms'],
+            $this->config['auth0']['validAudiences']
+        );
     }
 
     /**
@@ -37,9 +50,6 @@ class Factory
      */
     public function createOauth()
     {
-        return new SlimBootstrap\Authentication\Oauth(
-            $this->_config['authenticationUrl'],
-            $this->_logger
-        );
+        return new SlimBootstrap\Authentication\Oauth($this->config['authenticationUrl'], $this->logger);
     }
 }

@@ -105,6 +105,10 @@ class Hook
         );
     }
 
+    /**
+     * This hook is run before the actual route is dispatched and sets the Access-Control-Allow-Origin to * and sets
+     * the cache duration to the value specified in the config.
+     */
     public function cacheAndAccessHeader()
     {
         $this->_app->response->headers->set(
@@ -149,8 +153,6 @@ class Hook
     /**
      * This hook is run before the actual route is dispatched and enforces
      * the authentication and ACL if these are provided.
-     * Furthermore it sets the Access-Control-Allow-Origin to * and sets
-     * the cache duration to the value specified in the config.
      */
     public function authentication()
     {
@@ -162,10 +164,7 @@ class Hook
                     'REQUEST_METHOD'
                 ) . $currentRoute->getPattern();
 
-                if (true === array_key_exists(
-                        $routeId,
-                        $this->_endpointAuthentication
-                    )
+                if (true === array_key_exists($routeId, $this->_endpointAuthentication)
                     && false === $this->_endpointAuthentication[$routeId]
                 ) {
                     return;

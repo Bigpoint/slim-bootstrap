@@ -21,6 +21,7 @@
     "require": {
         "php": ">=5.3.3",
         "slim/slim": "2.5.*",
+        "auth0/auth0-php": "5.*",
         "flynsarmy/slim-monolog": "1.*",
         "bigpoint/monolog-creator": "1.*",
         "nocarrier/hal": "0.9.*"
