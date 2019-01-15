@@ -39,8 +39,8 @@ class Factory
     {
         return new SlimBootstrap\Authentication\Auth0(
             $this->config['auth0']['authorizedIss'],
-            $this->config['auth0']['signingSecret'],
             $this->logger,
+            $this->config['auth0']['signingSecret'],
             $this->config['auth0']['supportedAlgorithms'],
             $this->config['auth0']['validAudiences']
         );
