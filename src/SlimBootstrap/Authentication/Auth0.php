@@ -61,7 +61,13 @@ class Auth0 implements SlimBootstrap\Authentication
 
             return $tokenInfo->sub;
         } catch (auth0Sdk\Exception\CoreException $coreException) {
-            $this->logger->addDebug($coreException->getTraceAsString());
+            $this->logger->addDebug($coreException);
+            $this->logger->addDebug(
+                $coreException->getMessage(),
+                array(
+                    'trace' => $coreException->getTrace(),
+                )
+            );
             throw new SlimBootstrap\Exception('Access token invalid', 401, \Slim\Log::WARN);
         }
     }
