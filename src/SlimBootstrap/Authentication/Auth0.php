@@ -67,7 +67,7 @@ class Auth0 implements SlimBootstrap\Authentication
 
             $tokenInfo = $verifier->verifyAndDecode($token);
 
-            return $tokenInfo->sub;
+            return \str_replace('@clients', '', $tokenInfo->sub);
         } catch (auth0Sdk\Exception\CoreException $coreException) {
             $this->logger->addDebug($coreException);
 
@@ -84,7 +84,7 @@ class Auth0 implements SlimBootstrap\Authentication
     {
         $verifier = new auth0Sdk\JWTVerifier(array(
             'authorized_iss'  => $this->authorizedIss,
-            'client_secret'   => $this->signingSecret,
+            'client_secret'   => \base64_encode($this->signingSecret),
             'supported_algs'  => $this->supportedAlgorithms,
             'valid_audiences' => $this->validAudiences,
         ));
