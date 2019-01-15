@@ -13,6 +13,11 @@ class Auth0 implements SlimBootstrap\Authentication
     private $authorizedIss;
 
     /**
+     * @var string
+     */
+    private $clientSecret;
+
+    /**
      * @var Monolog\Logger
      */
     private $logger;
@@ -29,17 +34,20 @@ class Auth0 implements SlimBootstrap\Authentication
 
     /**
      * @param array          $authorizedIss
+     * @param string         $clientSecret
      * @param Monolog\Logger $logger
      * @param array          $supportedAlgorithms
      * @param array          $validAudiences
      */
     public function __construct(
         array $authorizedIss,
+        $clientSecret,
         Monolog\Logger $logger,
         array $supportedAlgorithms,
         array $validAudiences
     ) {
         $this->authorizedIss       = $authorizedIss;
+        $this->clientSecret        = $clientSecret;
         $this->logger              = $logger;
         $this->supportedAlgorithms = $supportedAlgorithms;
         $this->validAudiences      = $validAudiences;
@@ -80,9 +88,10 @@ class Auth0 implements SlimBootstrap\Authentication
     private function createVerifier()
     {
         $verifier = new auth0Sdk\JWTVerifier(array(
-            'supported_algs' => $this->supportedAlgorithms,
+            'authorized_iss'  => $this->authorizedIss,
+            'client_secret'   => $this->clientSecret,
+            'supported_algs'  => $this->supportedAlgorithms,
             'valid_audiences' => $this->validAudiences,
-            'authorized_iss' => $this->authorizedIss
         ));
 
         return $verifier;
