@@ -13,14 +13,14 @@ class Auth0 implements SlimBootstrap\Authentication
     private $authorizedIss;
 
     /**
-     * @var string
-     */
-    private $clientSecret;
-
-    /**
      * @var Monolog\Logger
      */
     private $logger;
+
+    /**
+     * @var string
+     */
+    private $signingSecret;
 
     /**
      * @var array
@@ -34,21 +34,21 @@ class Auth0 implements SlimBootstrap\Authentication
 
     /**
      * @param array          $authorizedIss
-     * @param string         $clientSecret
      * @param Monolog\Logger $logger
+     * @param string         $signingSecret
      * @param array          $supportedAlgorithms
      * @param array          $validAudiences
      */
     public function __construct(
         array $authorizedIss,
-        $clientSecret,
         Monolog\Logger $logger,
+        $signingSecret,
         array $supportedAlgorithms,
         array $validAudiences
     ) {
         $this->authorizedIss       = $authorizedIss;
-        $this->clientSecret        = $clientSecret;
         $this->logger              = $logger;
+        $this->signingSecret       = $signingSecret;
         $this->supportedAlgorithms = $supportedAlgorithms;
         $this->validAudiences      = $validAudiences;
     }
@@ -70,12 +70,7 @@ class Auth0 implements SlimBootstrap\Authentication
             return $tokenInfo->sub;
         } catch (auth0Sdk\Exception\CoreException $coreException) {
             $this->logger->addDebug($coreException);
-            $this->logger->addDebug(
-                $coreException->getMessage(),
-                array(
-                    'trace' => $coreException->getTrace(),
-                )
-            );
+
             throw new SlimBootstrap\Exception('Access token invalid', 401, \Slim\Log::WARN);
         }
     }
@@ -89,7 +84,7 @@ class Auth0 implements SlimBootstrap\Authentication
     {
         $verifier = new auth0Sdk\JWTVerifier(array(
             'authorized_iss'  => $this->authorizedIss,
-            'client_secret'   => $this->clientSecret,
+            'client_secret'   => $this->signingSecret,
             'supported_algs'  => $this->supportedAlgorithms,
             'valid_audiences' => $this->validAudiences,
         ));
