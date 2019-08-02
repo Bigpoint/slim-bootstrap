@@ -1,5 +1,9 @@
 # Slim Bootstrap
 
+
+**This framework is deprecated in favor of https://github.com/Bigpoint/slim-bootstrap3/**.
+
+
 These classes provide a simple way to bootstrap a Slim application with authentication.
 
 It is an abstraction of the [Slim Framework](http://slimframework.com/) and handles some stuff like output generation in different formats and authentication / acl handling.
